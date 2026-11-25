@@ -14,9 +14,7 @@ holds 1,000 products; Valkey sits in front of it through Spring's cache abstract
 ## Run
 
 ```bash
-docker compose -f applications/demo-app/docker-compose.yml up -d   # or: valkey-server --io-threads 4
-./gradlew :applications:demo-app:bootRun
-open http://localhost:9090/demo.html
+./deployments/local/valkey.sh
 ```
 
 ## API
@@ -27,6 +25,47 @@ open http://localhost:9090/demo.html
 - `GET  /api/events` SSE stream of price changes
 - `POST /api/benchmark?threads=16&ops=50000&writePercent=10`
 - `GET  /api/stats`, `DELETE /api/cache`
+
+
+```shell
+curl -i "http://localhost:9090/api/products/101"
+```
+
+```shell
+curl -N -H "Accept: text/event-stream" "http://localhost:9090/api/events"
+```
+
+Write through
+
+```shell
+curl -i -X PUT "http://localhost:9090/api/products/101/price?price=9.99"
+```
+
+Fetches the top N products tracked in your Valkey ZSET (call GET /api/products/{id} a few times first to populate view counts):
+
+Bash
+```shell
+curl -s "http://localhost:9090/api/popular?limit=5"
+```
+
+Run Benchmark (POST /api/benchmark)
+Triggers the load/throughput benchmark with your query parameters:
+
+Bash
+```shell
+curl -i -X POST "http://localhost:9090/api/benchmark?threads=16&ops=50000&writePercent=10"
+```
+
+
+# Get cache statistics
+```shell
+curl -s "http://localhost:9090/api/stats"
+```
+Flush Cache
+
+```shell
+curl -i -X DELETE "http://localhost:9090/api/cache"
+```
 
 ## Suggested talk track
 
