@@ -1,0 +1,3 @@
+rootProject.name = 'spring-valkey-office-hours'
+include ':components:domain'
+include ':applications:demo-app'
