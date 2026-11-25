@@ -1,8 +1,11 @@
-package io.cloudnativedata.spring.valkey.office.hours;
+package io.cloudnativedata.spring.valkey.office.hours.service;
 
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
 
+import io.cloudnativedata.spring.valkey.office.hours.domains.Product;
+import io.cloudnativedata.spring.valkey.office.hours.ProductCatalog;
+import io.cloudnativedata.spring.valkey.office.hours.ProductEvents;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;

@@ -9,6 +9,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
+import io.cloudnativedata.spring.valkey.office.hours.domains.Product;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
@@ -40,7 +41,7 @@ public class ProductCatalog {
                     category,
                     BigDecimal.valueOf(9_99 + random.nextInt(199_000), 2),
                     random.nextInt(500),
-                    Instant.now()));
+                    System.currentTimeMillis()));
         });
     }
 
@@ -52,7 +53,7 @@ public class ProductCatalog {
 
     public Product save(Product product) {
         simulateLatency();
-        table.put(product.id(), product);
+        table.put(product.getId(), product);
         return product;
     }
 

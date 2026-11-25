@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import io.cloudnativedata.spring.valkey.office.hours.domains.Product;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -31,7 +32,7 @@ public class ProductEvents implements MessageListener {
 
     public void publishPriceChange(Product before, Product after) {
         String json = "{\"id\":\"%s\",\"name\":\"%s\",\"oldPrice\":%s,\"newPrice\":%s,\"at\":\"%s\"}"
-                .formatted(after.id(), after.name(), before.price(), after.price(), after.updatedAt());
+                .formatted(after.getId(), after.getName(), before.getPrice(), after.getPrice(), after.getUpdatedAt());
         redis.convertAndSend(CHANNEL, json);
     }
 

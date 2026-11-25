@@ -1,10 +1,14 @@
-package io.cloudnativedata.spring.valkey.office.hours;
+package io.cloudnativedata.spring.valkey.office.hours.controller;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import io.cloudnativedata.spring.valkey.office.hours.domains.Product;
+import io.cloudnativedata.spring.valkey.office.hours.ProductCatalog;
+import io.cloudnativedata.spring.valkey.office.hours.ProductEvents;
+import io.cloudnativedata.spring.valkey.office.hours.service.ProductService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
