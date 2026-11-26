@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.Assert;
 
 @Configuration
 @Slf4j
@@ -18,7 +19,7 @@ public class DemoConfig {
     @Value("${productCount:10000}")
     private int productCount;
 
-    @Bean
+//    @Bean
     ApplicationRunner oracleComparisonThroughput(ProductionJpaRepository postgresRepository,
                                                  ProductKeyValueRepository valkeyRepository) {
         return args -> {
@@ -58,6 +59,55 @@ public class DemoConfig {
             log.info("Improvement - Valkey is: {}% ({}x faster)",
                     String.format("%.2f", percentImprovement),
                     String.format("%.2f", speedupMultiplier));
+
+        };
+    }
+
+    @Bean
+    ApplicationRunner reads(ProductKeyValueRepository valkeyRepository,ProductionJpaRepository oracleRepository){
+        return args -> {
+
+
+            Product product = JavaBeanGeneratorCreator.of(Product.class).create();
+            valkeyRepository.save(product);
+
+            Assert.isTrue(valkeyRepository.findById(product.getId()).isPresent(),"Has Record");
+
+            long start = System.nanoTime();
+            int iterations = 100;
+            for (int i = 0; i < iterations; i++) {
+                valkeyRepository.findById(product.getId());
+            }
+            long end = System.nanoTime();
+
+            long totalNs = end - start;
+            double avgLatencyMs = (totalNs / (double) iterations) / 1_000_000.0;
+            double avgLatencyUs = (totalNs / (double) iterations) / 1_000.0;
+
+            log.info("Valkey Average latency: {} ms ({} µs)",
+                    String.format("%.4f", avgLatencyMs),
+                    String.format("%.2f", avgLatencyUs));
+
+
+            var productEntity = JavaBeanGeneratorCreator.of(ProductEntity.class).create();
+            oracleRepository.save(productEntity);
+
+            Assert.isTrue(oracleRepository.findById(productEntity.getProductId()).isPresent(),"Has Record");
+
+             start = System.nanoTime();
+            for (int i = 0; i < iterations; i++) {
+                oracleRepository.findById(productEntity.getProductId());
+            }
+             end = System.nanoTime();
+
+            totalNs = end - start;
+             avgLatencyMs = (totalNs / (double) iterations) / 1_000_000.0;
+             avgLatencyUs = (totalNs / (double) iterations) / 1_000.0;
+
+            log.info("Oracle Average latency: {} ms ({} µs)",
+                    String.format("%.4f", avgLatencyMs),
+                    String.format("%.2f", avgLatencyUs));
+
 
         };
     }
