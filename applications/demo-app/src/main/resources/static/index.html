@@ -39,13 +39,13 @@
 <!-- Toast Notification Container -->
 <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"></div>
 
-<!-- 1. SLIM SPRING DEVELOPER UTILITY BAR (API Connection, Mode & Telemetry Drawer Toggle) -->
+<!-- 1. SLIM SPRING DEVELOPER UTILITY BAR (API Connection & Telemetry Drawer Toggle) -->
 <div class="bg-[#191E1E] text-white border-b border-white/10 text-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-3">
         <!-- Left: Spring Boot Controller Status -->
         <div class="flex items-center gap-3 flex-wrap">
                 <span class="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#6DB33F] font-semibold">
-                    <span class="w-2 h-2 rounded-full bg-[#6DB33F]"></span>
+                    <span id="backendStatusDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
                     Spring Web API
                 </span>
             <span class="text-white/25 hidden sm:inline">|</span>
@@ -54,7 +54,7 @@
                 <input
                         id="baseUrlInput"
                         type="text"
-                        value="/api"
+                        value="http://localhost:9090/api"
                         aria-label="Spring Boot Base API URL"
                         class="bg-transparent font-mono text-[11px] text-white focus:outline-none w-44 sm:w-52"
                 />
@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        <!-- Right: Demo Switcher & Live SSE Telemetry Drawer Button -->
+        <!-- Right: Connection Status & Live SSE Telemetry Drawer Button -->
         <div class="flex items-center gap-3">
             <!-- Live SSE Feed Toggle Pill -->
             <button
@@ -77,20 +77,7 @@
                 <span id="sseEventCountBadge" class="px-1.5 py-0.2 rounded-full bg-[#6DB33F]/20 text-[#6DB33F] font-bold">0</span>
             </button>
 
-            <!-- Demo / Live Mode Switch -->
-            <div class="flex items-center gap-2">
-                <span id="modeBadgeLabel" class="font-mono text-[11px] text-amber-300 font-medium">Demo Storefront</span>
-                <button
-                        id="demoModeToggle"
-                        type="button"
-                        role="switch"
-                        aria-checked="true"
-                        aria-label="Toggle Demo Storefront Mode"
-                        class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-amber-500 transition-colors duration-200 focus:outline-none"
-                >
-                    <span id="demoModeKnob" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 translate-x-4"></span>
-                </button>
-            </div>
+            <span id="connectionStatusLabel" class="font-mono text-[11px] text-[#6DB33F] font-medium">Live Spring API</span>
         </div>
     </div>
 </div>
@@ -123,7 +110,7 @@
                 <input
                         id="navLookupInput"
                         type="text"
-                        placeholder="Lookup product by ID (e.g. prod-101)..."
+                        placeholder="Lookup product by ID (e.g. 1)..."
                         class="w-full pl-10 pr-24 py-2 rounded-full bg-[#F8F9FA] border border-slate-300 text-sm text-[#191E1E] placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6DB33F] focus:border-[#6DB33F] transition"
                 />
                 <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +158,7 @@
             <input
                     id="mobileLookupInput"
                     type="text"
-                    placeholder="Inspect Product ID (e.g. prod-101)..."
+                    placeholder="Inspect Product ID (e.g. 1)..."
                     class="w-full pl-9 pr-20 py-2 rounded-full bg-[#F8F9FA] border border-slate-300 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6DB33F]"
             />
             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,13 +177,10 @@
         <div class="flex items-center gap-2 min-w-0">
             <span class="px-2 py-0.5 rounded-full bg-[#6DB33F] text-white font-mono text-[10px] font-bold uppercase tracking-wider shrink-0">LIVE FEED</span>
             <p id="liveTickerText" class="text-[#191E1E] font-medium truncate">
-                Real-time Valkey/Redis view leaderboard & <code class="font-mono text-[#5FA134]">/api/events</code> SSE stream active.
+                Connected to Valkey/Redis view leaderboard & <code class="font-mono text-[#5FA134]">/api/events</code> SSE stream.
             </p>
         </div>
         <div class="flex items-center gap-3 shrink-0">
-            <button id="tickerSimulateBtn" type="button" class="text-[#5FA134] hover:text-[#191E1E] font-semibold underline">
-                Simulate Live Price Drop
-            </button>
             <button id="tickerViewLogBtn" type="button" class="font-mono text-[11px] text-slate-600 hover:text-[#191E1E]">
                 View Stream →
             </button>
@@ -246,12 +230,12 @@
                             <h2 class="font-display font-bold text-base text-[#191E1E]">GET /api/products/{id}</h2>
                         </div>
                         <span id="heroElapsedBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F1F8EC] border border-[#6DB33F]/40 text-[#5FA134] font-mono text-xs font-bold">
-                                ⚡ <span id="heroElapsedValue">0.42</span> ms
+                                ⚡ <span id="heroElapsedValue">--</span> ms
                             </span>
                     </div>
 
                     <div id="heroSpotlightBody" class="pt-4">
-                        <!-- Populated dynamically with latest inspected product -->
+                        <p class="text-xs text-slate-500">Select any product or use the search bar to inspect live API telemetry.</p>
                     </div>
                 </div>
             </div>
@@ -350,7 +334,7 @@
         <!-- Modal Header -->
         <div class="px-6 py-4 bg-[#F8F9FA] border-b border-slate-200 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <span id="modalProductSku" class="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-[#F1F8EC] text-[#5FA134] border border-[#6DB33F]/30">prod-101</span>
+                <span id="modalProductSku" class="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-[#F1F8EC] text-[#5FA134] border border-[#6DB33F]/30">1</span>
                 <span id="modalElapsedPill" class="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700">X-Elapsed-Ms: 0.41 ms</span>
             </div>
             <button id="closeProductModalBtn" type="button" class="w-8 h-8 rounded-full bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#191E1E] transition">
@@ -365,16 +349,18 @@
                     <!-- SVG Product Illustration -->
                 </div>
                 <div class="sm:col-span-7 space-y-3">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <span id="modalProductCategory" class="text-xs font-semibold uppercase tracking-wider text-[#6DB33F]">Category</span>
                         <span class="text-slate-300">•</span>
                         <span id="modalProductViews" class="font-mono text-xs text-slate-500">0 views</span>
+                        <span class="text-slate-300">•</span>
+                        <span id="modalProductStock" class="font-mono text-xs text-slate-600">0 in stock</span>
                     </div>
                     <h3 id="modalProductName" class="font-display font-extrabold text-2xl text-[#191E1E]">Product Name</h3>
-                    <p id="modalProductDesc" class="text-sm text-slate-600 leading-relaxed">Description</p>
+                    <p id="modalProductUpdatedAt" class="font-mono text-[11px] text-slate-400">UpdatedAt: 0</p>
                     <div class="pt-2 flex items-baseline gap-3">
                         <span id="modalProductPrice" class="font-display font-extrabold text-3xl text-[#191E1E]">$0.00</span>
-                        <span class="text-xs text-[#5FA134] font-medium">In Stock · Ready to Ship</span>
+                        <span id="modalStockStatusBadge" class="text-xs text-[#5FA134] font-medium">In Stock · Ready to Ship</span>
                     </div>
 
                     <div class="pt-2 flex flex-wrap gap-2.5">
@@ -436,33 +422,48 @@
         <form id="createProductForm" class="p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label for="postIdInput" class="block text-xs font-semibold text-slate-700 mb-1">Product ID / SKU</label>
-                    <input id="postIdInput" type="text" required placeholder="prod-107" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                    <label for="postIdInput" class="block text-xs font-semibold text-slate-700 mb-1">Product ID</label>
+                    <input id="postIdInput" type="text" required value="1" placeholder="1" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
                 </div>
                 <div>
-                    <label for="postPriceInput" class="block text-xs font-semibold text-slate-700 mb-1">Price (USD)</label>
-                    <input id="postPriceInput" type="number" step="0.01" min="0.01" required placeholder="49.00" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                    <label for="postCategoryInput" class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                    <input id="postCategoryInput" type="text" list="categorySuggestions" required value="hardware" placeholder="hardware" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                    <datalist id="categorySuggestions">
+                        <option value="hardware"></option>
+                        <option value="apparel"></option>
+                        <option value="peripherals"></option>
+                        <option value="accessories"></option>
+                    </datalist>
                 </div>
             </div>
 
             <div>
-                <label for="postNameInput" class="block text-xs font-semibold text-slate-700 mb-1">Product Title</label>
-                <input id="postNameInput" type="text" required placeholder="Spring Boot Leaf Hoodie" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                <label for="postNameInput" class="block text-xs font-semibold text-slate-700 mb-1">Product Name</label>
+                <input id="postNameInput" type="text" required value="Spring hammer" placeholder="Spring hammer" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
             </div>
 
-            <div>
-                <label for="postCategoryInput" class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
-                <select id="postCategoryInput" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]">
-                    <option value="Apparel">Apparel</option>
-                    <option value="Hardware">Hardware</option>
-                    <option value="Peripherals">Peripherals</option>
-                    <option value="Accessories">Accessories</option>
-                </select>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label for="postPriceInput" class="block text-xs font-semibold text-slate-700 mb-1">Price</label>
+                    <input id="postPriceInput" type="number" step="any" min="0" required value="1" placeholder="1" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                </div>
+                <div>
+                    <label for="postStockInput" class="block text-xs font-semibold text-slate-700 mb-1">Stock</label>
+                    <input id="postStockInput" type="number" step="1" min="0" required value="2" placeholder="2" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                </div>
+                <div>
+                    <label for="postUpdatedAtInput" class="block text-xs font-semibold text-slate-700 mb-1">Updated At</label>
+                    <input id="postUpdatedAtInput" type="number" step="1" required value="0" placeholder="0" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                </div>
             </div>
 
+            <!-- Live JSON Payload Preview matching curl schema -->
             <div>
-                <label for="postDescInput" class="block text-xs font-semibold text-slate-700 mb-1">Description</label>
-                <textarea id="postDescInput" rows="2" placeholder="Heavyweight organic cotton hoodie with embroidered Spring leaf logo." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]"></textarea>
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[11px] font-semibold text-slate-600">JSON Request Body Preview</span>
+                    <span class="font-mono text-[10px] text-slate-400">Content-Type: application/json</span>
+                </div>
+                <pre id="postPayloadPreview" class="rounded-xl bg-[#191E1E] text-emerald-300 p-3 text-xs font-mono overflow-x-auto"></pre>
             </div>
 
             <div class="pt-2 flex items-center justify-end gap-2.5">
@@ -525,9 +526,6 @@
                 <button id="sseToggleBtn" type="button" class="px-3 py-1.5 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white text-xs font-semibold transition">
                     Disconnect
                 </button>
-                <button id="sseSimulateBtn" type="button" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition">
-                    + Simulate Event
-                </button>
             </div>
             <button id="sseClearBtn" type="button" class="text-xs font-mono text-slate-400 hover:text-white">Clear</button>
         </div>
@@ -542,83 +540,18 @@
 <script>
     (() => {
         // =========================================================================
-        // 1. INITIAL STOREFRONT CATALOG & STATE
+        // 1. STOREFRONT STATE
         // =========================================================================
-        const INITIAL_PRODUCTS = [
-            {
-                id: 'prod-101',
-                name: 'Spring Leaf Mechanical Keyboard',
-                price: 189.00,
-                category: 'Peripherals',
-                description: 'Custom 75% CNC aluminum mechanical keyboard with tactile green switches and QMK/VIA firmware.'
-            },
-            {
-                id: 'prod-102',
-                name: 'Valkey NVMe Gen5 2TB Drive',
-                price: 249.99,
-                category: 'Hardware',
-                description: 'Sub-millisecond enterprise M.2 solid-state storage engineered for high-throughput in-memory persistence.'
-            },
-            {
-                id: 'prod-103',
-                name: 'Spring Boot Developer Hoodie',
-                price: 68.00,
-                category: 'Apparel',
-                description: 'Heavyweight 450gsm organic French terry hoodie in Spring Charcoal with embroidered leaf emblem.'
-            },
-            {
-                id: 'prod-104',
-                name: 'Thunderbolt 4 Workstation Dock',
-                price: 279.00,
-                category: 'Hardware',
-                description: '12-port aluminum dock supporting dual 4K 120Hz displays, 2.5GbE Ethernet, and 96W host charging.'
-            },
-            {
-                id: 'prod-105',
-                name: 'Reactive Streams Insulated Tumbler',
-                price: 32.50,
-                category: 'Accessories',
-                description: 'Double-wall vacuum-insulated matte stainless steel tumbler with laser-etched Spring hexagon mark.'
-            },
-            {
-                id: 'prod-106',
-                name: 'Cloud Native Desk Mat XL',
-                price: 42.00,
-                category: 'Peripherals',
-                description: '900x400mm micro-weave stitched desk mat featuring subtle Spring architecture blueprint grid lines.'
-            }
-        ];
-
-        const INITIAL_VIEWS = {
-            'prod-101': 84,
-            'prod-102': 67,
-            'prod-103': 53,
-            'prod-104': 39,
-            'prod-105': 28,
-            'prod-106': 19
-        };
-
         const state = {
-            demoMode: true,
-            mockDb: new Map(),
-            mockViews: new Map(),
-            lookupHits: new Map(),
+            products: new Map(),
+            views: new Map(),
             activeCategory: 'All',
             activeModalProductId: null,
             cart: new Map(), // id -> qty
             sseConnected: false,
             eventSource: null,
-            mockSseTimer: null,
             sseEventCount: 0
         };
-
-        function seedStorefront() {
-            state.mockDb.clear();
-            state.mockViews.clear();
-            state.lookupHits.clear();
-            INITIAL_PRODUCTS.forEach(p => state.mockDb.set(p.id, { ...p }));
-            Object.entries(INITIAL_VIEWS).forEach(([id, v]) => state.mockViews.set(id, v));
-        }
 
         // =========================================================================
         // 2. DOM REFERENCES
@@ -626,9 +559,8 @@
         const dom = {
             baseUrlInput: document.getElementById('baseUrlInput'),
             pingBackendBtn: document.getElementById('pingBackendBtn'),
-            demoModeToggle: document.getElementById('demoModeToggle'),
-            demoModeKnob: document.getElementById('demoModeKnob'),
-            modeBadgeLabel: document.getElementById('modeBadgeLabel'),
+            backendStatusDot: document.getElementById('backendStatusDot'),
+            connectionStatusLabel: document.getElementById('connectionStatusLabel'),
 
             // Navbar & Search
             navLookupForm: document.getElementById('navLookupForm'),
@@ -639,7 +571,6 @@
 
             // Live Ticker
             liveTickerText: document.getElementById('liveTickerText'),
-            tickerSimulateBtn: document.getElementById('tickerSimulateBtn'),
             tickerViewLogBtn: document.getElementById('tickerViewLogBtn'),
 
             // Hero Spotlight
@@ -661,9 +592,11 @@
             modalProductArtwork: document.getElementById('modalProductArtwork'),
             modalProductCategory: document.getElementById('modalProductCategory'),
             modalProductViews: document.getElementById('modalProductViews'),
+            modalProductStock: document.getElementById('modalProductStock'),
             modalProductName: document.getElementById('modalProductName'),
-            modalProductDesc: document.getElementById('modalProductDesc'),
+            modalProductUpdatedAt: document.getElementById('modalProductUpdatedAt'),
             modalProductPrice: document.getElementById('modalProductPrice'),
+            modalStockStatusBadge: document.getElementById('modalStockStatusBadge'),
             modalAddToCartBtn: document.getElementById('modalAddToCartBtn'),
             modalUpdatePriceForm: document.getElementById('modalUpdatePriceForm'),
             modalNewPriceInput: document.getElementById('modalNewPriceInput'),
@@ -676,10 +609,12 @@
             cancelAddProductBtn: document.getElementById('cancelAddProductBtn'),
             createProductForm: document.getElementById('createProductForm'),
             postIdInput: document.getElementById('postIdInput'),
-            postPriceInput: document.getElementById('postPriceInput'),
             postNameInput: document.getElementById('postNameInput'),
             postCategoryInput: document.getElementById('postCategoryInput'),
-            postDescInput: document.getElementById('postDescInput'),
+            postPriceInput: document.getElementById('postPriceInput'),
+            postStockInput: document.getElementById('postStockInput'),
+            postUpdatedAtInput: document.getElementById('postUpdatedAtInput'),
+            postPayloadPreview: document.getElementById('postPayloadPreview'),
 
             // Cart Drawer
             openCartDrawerBtn: document.getElementById('openCartDrawerBtn'),
@@ -698,7 +633,6 @@
             navSseDot: document.getElementById('navSseDot'),
             sseEventCountBadge: document.getElementById('sseEventCountBadge'),
             sseToggleBtn: document.getElementById('sseToggleBtn'),
-            sseSimulateBtn: document.getElementById('sseSimulateBtn'),
             sseClearBtn: document.getElementById('sseClearBtn'),
             sseEventLog: document.getElementById('sseEventLog'),
 
@@ -790,44 +724,29 @@
             if (!cleanId) return;
 
             try {
-                let product = null;
-                let elapsedMs = '0.45';
+                const t0 = performance.now();
+                const res = await fetch(`${getBaseUrl()}/products/${encodeURIComponent(cleanId)}`);
+                const t1 = performance.now();
 
-                if (state.demoMode) {
-                    const hits = state.lookupHits.get(cleanId) || 0;
-                    state.lookupHits.set(cleanId, hits + 1);
-
-                    if (!state.mockDb.has(cleanId)) {
-                        throw { status: 404, error: `No product found with id: ${cleanId}` };
-                    }
-
-                    product = { ...state.mockDb.get(cleanId) };
-                    // Simulate redis.opsForZSet().incrementScore("catalog:views", id, 1)
-                    state.mockViews.set(cleanId, (state.mockViews.get(cleanId) || 0) + 1);
-                    elapsedMs = hits === 0
-                        ? (14.2 + Math.random() * 9).toFixed(2)
-                        : (0.29 + Math.random() * 0.55).toFixed(2);
-                } else {
-                    const t0 = performance.now();
-                    const res = await fetch(`${getBaseUrl()}/products/${encodeURIComponent(cleanId)}`);
-                    const t1 = performance.now();
-
-                    if (res.status === 404) {
-                        const errJson = await res.json().catch(() => ({ error: `Product '${cleanId}' not found` }));
-                        throw { status: 404, ...errJson };
-                    }
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                    const headerMs = res.headers.get('X-Elapsed-Ms');
-                    elapsedMs = headerMs !== null ? headerMs : (t1 - t0).toFixed(2);
-                    product = await res.json();
+                if (res.status === 404) {
+                    const errJson = await res.json().catch(() => ({ error: `Product '${cleanId}' not found` }));
+                    throw { status: 404, ...errJson };
                 }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                // Update Hero Telemetry Spotlight
-                updateHeroSpotlight(product, elapsedMs);
+                const headerMs = res.headers.get('X-Elapsed-Ms');
+                const elapsedMs = headerMs !== null ? headerMs : (t1 - t0).toFixed(2);
+                const product = await res.json();
+
+                if (product && product.id) {
+                    state.products.set(product.id, product);
+                }
 
                 // Refresh Trending & Catalog views
                 await loadTrendingAndCatalog();
+
+                // Update Hero Telemetry Spotlight
+                updateHeroSpotlight(product, elapsedMs);
 
                 if (openModal) {
                     openProductModal(product, elapsedMs);
@@ -843,16 +762,18 @@
 
         function updateHeroSpotlight(product, elapsedMs) {
             dom.heroElapsedValue.textContent = elapsedMs;
-            const views = state.mockViews.get(product.id) || 1;
+            const views = state.views.get(product.id) || 1;
+            const stock = product.stock ?? 0;
             dom.heroSpotlightBody.innerHTML = `
                     <div class="flex items-center gap-4">
                         <div class="w-16 h-16 rounded-2xl bg-[#F8F9FA] border border-slate-200 flex items-center justify-center shrink-0">
                             ${getProductSvg(product.category)}
                         </div>
                         <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-mono text-[11px] font-semibold text-[#5FA134] bg-[#F1F8EC] px-2 py-0.5 rounded">${escapeHtml(product.id)}</span>
                                 <span class="font-mono text-[11px] text-slate-400">${views} views</span>
+                                <span class="font-mono text-[11px] text-slate-500">· ${stock} in stock</span>
                             </div>
                             <h3 class="font-display font-bold text-base text-[#191E1E] truncate mt-1">${escapeHtml(product.name)}</h3>
                             <div class="flex items-center justify-between mt-1.5">
@@ -874,27 +795,16 @@
             let popularItems = [];
 
             try {
-                if (state.demoMode) {
-                    popularItems = Array.from(state.mockViews.entries())
-                        .filter(([id]) => state.mockDb.has(id))
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, limit)
-                        .map(([id, views]) => ({
-                            product: { ...state.mockDb.get(id) },
-                            views
-                        }));
-                } else {
-                    const res = await fetch(`${getBaseUrl()}/popular?limit=${limit}`);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    popularItems = await res.json();
-                    // Sync live products into local catalog view
-                    popularItems.forEach(item => {
-                        if (item.product && item.product.id) {
-                            state.mockDb.set(item.product.id, item.product);
-                            state.mockViews.set(item.product.id, item.views);
-                        }
-                    });
-                }
+                const res = await fetch(`${getBaseUrl()}/popular?limit=${limit}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                popularItems = await res.json();
+
+                popularItems.forEach(item => {
+                    if (item.product && item.product.id) {
+                        state.products.set(item.product.id, item.product);
+                        state.views.set(item.product.id, item.views);
+                    }
+                });
             } catch (err) {
                 showToast('API Error', `Could not load /popular: ${err.message}`, 'error');
             }
@@ -906,7 +816,7 @@
 
         function renderTrendingGrid(items) {
             if (!items || items.length === 0) {
-                dom.trendingGrid.innerHTML = `<div class="col-span-full text-center py-8 bg-white rounded-2xl border border-dashed border-slate-300 text-xs text-slate-500">No popularity scores recorded yet. Click any product to record a view!</div>`;
+                dom.trendingGrid.innerHTML = `<div class="col-span-full text-center py-8 bg-white rounded-2xl border border-dashed border-slate-300 text-xs text-slate-500">No popularity scores recorded yet. Lookup or add a product to populate the leaderboard.</div>`;
                 return;
             }
 
@@ -930,7 +840,7 @@
                                     ${getProductSvg(p.category)}
                                 </div>
                                 <h3 class="font-display font-bold text-sm text-[#191E1E] line-clamp-1 group-hover:text-[#5FA134] transition">${escapeHtml(p.name)}</h3>
-                                <p class="font-mono text-[11px] text-slate-400 mt-0.5">${escapeHtml(p.id)}</p>
+                                <p class="font-mono text-[11px] text-slate-400 mt-0.5">ID: ${escapeHtml(p.id)} · Stock: ${p.stock ?? 0}</p>
                             </div>
 
                             <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
@@ -947,7 +857,7 @@
         }
 
         function renderCategoryPills() {
-            const categories = ['All', ...new Set(Array.from(state.mockDb.values()).map(p => p.category || 'General'))];
+            const categories = ['All', ...new Set(Array.from(state.products.values()).map(p => p.category || 'General'))];
             dom.categoryFilterBar.innerHTML = categories.map(cat => {
                 const active = state.activeCategory === cat;
                 return `
@@ -971,20 +881,26 @@
         }
 
         function renderCatalogGrid() {
-            const allProducts = Array.from(state.mockDb.values());
+            const allProducts = Array.from(state.products.values());
             const filtered = state.activeCategory === 'All'
                 ? allProducts
                 : allProducts.filter(p => (p.category || 'General') === state.activeCategory);
 
+            if (filtered.length === 0) {
+                dom.catalogGrid.innerHTML = `<div class="col-span-full text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300 text-sm text-slate-500">No products loaded yet. Lookup a product by ID or publish a new product to the catalog.</div>`;
+                return;
+            }
+
             dom.catalogGrid.innerHTML = filtered.map(p => {
-                const views = state.mockViews.get(p.id) || 0;
+                const views = state.views.get(p.id) || 0;
+                const stock = p.stock ?? 0;
                 return `
                         <article class="group bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-2xs hover:shadow-xl hover:border-[#6DB33F] transition-all duration-200 flex flex-col justify-between">
                             <div>
                                 <!-- Product Visual Header -->
                                 <div class="relative h-48 bg-[#F8F9FA] group-hover:bg-[#F1F8EC]/50 border-b border-slate-100 flex items-center justify-center p-6 transition cursor-pointer" data-inspect-id="${escapeHtml(p.id)}">
                                     <span class="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full bg-white border border-slate-200 font-mono text-[11px] font-semibold text-slate-600">
-                                        ${escapeHtml(p.id)}
+                                        ID: ${escapeHtml(p.id)}
                                     </span>
                                     <span class="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full bg-[#F1F8EC] border border-[#6DB33F]/30 font-mono text-[11px] font-semibold text-[#5FA134]">
                                         👁 ${views}
@@ -996,12 +912,15 @@
 
                                 <!-- Product Copy -->
                                 <div class="p-6 pb-4">
-                                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#6DB33F]">${escapeHtml(p.category || 'Catalog')}</span>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-[#6DB33F]">${escapeHtml(p.category || 'Catalog')}</span>
+                                        <span class="font-mono text-[11px] font-medium ${stock > 0 ? 'text-slate-600' : 'text-rose-600'}">Stock: ${stock}</span>
+                                    </div>
                                     <h3 class="font-display font-bold text-lg text-[#191E1E] mt-1 group-hover:text-[#5FA134] transition cursor-pointer" data-inspect-id="${escapeHtml(p.id)}">
                                         ${escapeHtml(p.name)}
                                     </h3>
-                                    <p class="text-sm text-slate-600 mt-1.5 line-clamp-2 leading-relaxed">
-                                        ${escapeHtml(p.description || 'Official Spring developer catalog item.')}
+                                    <p class="font-mono text-[11px] text-slate-400 mt-1.5">
+                                        UpdatedAt: ${escapeHtml(p.updatedAt ?? 0)}
                                     </p>
                                 </div>
                             </div>
@@ -1051,16 +970,20 @@
         // =========================================================================
         function openProductModal(product, elapsedMs) {
             state.activeModalProductId = product.id;
-            const views = state.mockViews.get(product.id) || 1;
+            const views = state.views.get(product.id) || 1;
+            const stock = product.stock ?? 0;
 
-            dom.modalProductSku.textContent = product.id;
+            dom.modalProductSku.textContent = `ID: ${product.id}`;
             dom.modalElapsedPill.textContent = `X-Elapsed-Ms: ${elapsedMs} ms`;
             dom.modalProductArtwork.innerHTML = getProductSvg(product.category);
             dom.modalProductCategory.textContent = product.category || 'Catalog';
             dom.modalProductViews.textContent = `${views} Valkey views`;
+            dom.modalProductStock.textContent = `${stock} units`;
             dom.modalProductName.textContent = product.name;
-            dom.modalProductDesc.textContent = product.description || 'No description provided.';
+            dom.modalProductUpdatedAt.textContent = `updatedAt: ${product.updatedAt ?? 0}`;
             dom.modalProductPrice.textContent = formatMoney(product.price);
+            dom.modalStockStatusBadge.textContent = stock > 0 ? 'In Stock · Ready to Ship' : 'Out of Stock';
+            dom.modalStockStatusBadge.className = stock > 0 ? 'text-xs text-[#5FA134] font-medium' : 'text-xs text-rose-600 font-medium';
             dom.modalNewPriceInput.value = Number(product.price).toFixed(2);
             dom.modalRawJson.textContent = JSON.stringify(product, null, 2);
 
@@ -1079,28 +1002,13 @@
             if (!id || Number.isNaN(newPrice) || newPrice <= 0) return;
 
             try {
-                let updated = null;
-                if (state.demoMode) {
-                    const existing = state.mockDb.get(id);
-                    const oldPrice = existing.price;
-                    existing.price = Number(newPrice.toFixed(2));
-                    state.mockDb.set(id, existing);
-                    updated = { ...existing };
+                const res = await fetch(`${getBaseUrl()}/products/${encodeURIComponent(id)}/price?price=${encodeURIComponent(newPrice)}`, {
+                    method: 'PUT'
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const updated = await res.json();
 
-                    emitSseLog('PRICE_UPDATED', {
-                        id,
-                        name: existing.name,
-                        oldPrice,
-                        newPrice: existing.price
-                    });
-                } else {
-                    const res = await fetch(`${getBaseUrl()}/products/${encodeURIComponent(id)}/price?price=${encodeURIComponent(newPrice)}`, {
-                        method: 'PUT'
-                    });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    updated = await res.json();
-                }
-
+                state.products.set(updated.id, updated);
                 dom.modalProductPrice.textContent = formatMoney(updated.price);
                 dom.modalRawJson.textContent = JSON.stringify(updated, null, 2);
                 showToast('Price Updated', `${updated.name} is now ${formatMoney(updated.price)}`, 'success');
@@ -1114,36 +1022,46 @@
         // =========================================================================
         // 6. POST /api/products/product (CREATE NEW PRODUCT)
         // =========================================================================
-        async function handleCreateProduct(e) {
-            e.preventDefault();
-            const payload = {
+        function buildProductPayload() {
+            const rawPrice = parseFloat(dom.postPriceInput.value);
+            const rawStock = parseInt(dom.postStockInput.value, 10);
+            const rawUpdatedAt = parseInt(dom.postUpdatedAtInput.value, 10);
+
+            return {
                 id: dom.postIdInput.value.trim(),
                 name: dom.postNameInput.value.trim(),
-                price: Number(parseFloat(dom.postPriceInput.value).toFixed(2)),
-                category: dom.postCategoryInput.value,
-                description: dom.postDescInput.value.trim() || 'New SpringStore catalog arrival.'
+                category: dom.postCategoryInput.value.trim(),
+                price: Number.isNaN(rawPrice) ? 0 : rawPrice,
+                stock: Number.isNaN(rawStock) ? 0 : rawStock,
+                updatedAt: Number.isNaN(rawUpdatedAt) ? 0 : rawUpdatedAt
             };
+        }
 
-            if (!payload.id || !payload.name || Number.isNaN(payload.price)) return;
+        function updatePayloadPreview() {
+            dom.postPayloadPreview.textContent = JSON.stringify(buildProductPayload(), null, 2);
+        }
+
+        async function handleCreateProduct(e) {
+            e.preventDefault();
+            const payload = buildProductPayload();
+
+            if (!payload.id || !payload.name || !payload.category) return;
 
             try {
-                if (state.demoMode) {
-                    state.mockDb.set(payload.id, payload);
-                    if (!state.mockViews.has(payload.id)) state.mockViews.set(payload.id, 1);
-                    emitSseLog('PRODUCT_CREATED', payload);
-                } else {
-                    const res = await fetch(`${getBaseUrl()}/products/product`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                }
+                const res = await fetch(`${getBaseUrl()}/products/product`, {
+                    method: 'POST',
+                    headers: {
+                        'accept': '*/*',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+                state.products.set(payload.id, payload);
                 dom.addProductModal.classList.add('hidden');
-                dom.createProductForm.reset();
-                showToast('Product Published', `${payload.name} added to SpringStore.`, 'success');
-                await loadTrendingAndCatalog();
+                showToast('Product Published', `${payload.name} (ID: ${payload.id}) saved to catalog.`, 'success');
+                await inspectProduct(payload.id, false);
             } catch (err) {
                 showToast('Save Failed', err.message, 'error');
             }
@@ -1153,7 +1071,7 @@
         // 7. SHOPPING CART LOGIC
         // =========================================================================
         function addToCart(id) {
-            const product = state.mockDb.get(id);
+            const product = state.products.get(id);
             if (!product) return;
             state.cart.set(id, (state.cart.get(id) || 0) + 1);
             renderCart();
@@ -1172,7 +1090,7 @@
                     `;
             } else {
                 dom.cartItemsContainer.innerHTML = Array.from(state.cart.entries()).map(([id, qty]) => {
-                    const p = state.mockDb.get(id);
+                    const p = state.products.get(id);
                     if (!p) return '';
                     totalItems += qty;
                     subtotal += p.price * qty;
@@ -1225,7 +1143,7 @@
 
             const summary = payload && payload.name
                 ? `${eventName}: ${payload.name} → ${payload.newPrice ? formatMoney(payload.newPrice) : formatMoney(payload.price)}`
-                : `${eventName}: ${JSON.stringify(payload)}`;
+                : `${eventName}: ${typeof payload === 'string' ? payload : JSON.stringify(payload)}`;
             dom.liveTickerText.textContent = summary;
 
             const entry = document.createElement('div');
@@ -1240,28 +1158,6 @@
             dom.sseEventLog.prepend(entry);
         }
 
-        function simulateStoreEvent() {
-            const keys = Array.from(state.mockDb.keys());
-            const id = keys[Math.floor(Math.random() * keys.length)];
-            const item = state.mockDb.get(id);
-            if (!item) return;
-
-            const oldPrice = item.price;
-            const discount = Math.max(9.99, Number((oldPrice * 0.9).toFixed(2)));
-            item.price = discount;
-            state.mockDb.set(id, item);
-
-            emitSseLog('FLASH_SALE_PRICE_DROP', {
-                id: item.id,
-                name: item.name,
-                oldPrice,
-                newPrice: discount
-            });
-
-            loadTrendingAndCatalog();
-            renderCart();
-        }
-
         function connectSse() {
             disconnectSse();
             state.sseConnected = true;
@@ -1269,36 +1165,27 @@
             dom.sseToggleBtn.textContent = 'Disconnect';
             dom.sseToggleBtn.className = 'px-3 py-1.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition';
 
-            if (state.demoMode) {
-                emitSseLog('CONNECTED', { stream: 'Mock SseEmitter (/api/events)', status: 'SUBSCRIBED' });
-                state.mockSseTimer = setInterval(() => {
-                    if (state.sseConnected && state.demoMode) simulateStoreEvent();
-                }, 14000);
-            } else {
-                const url = `${getBaseUrl()}/events`;
-                const es = new EventSource(url);
-                state.eventSource = es;
-                es.onopen = () => emitSseLog('CONNECTED', { stream: url });
-                es.onmessage = (e) => {
-                    let data = e.data;
-                    try { data = JSON.parse(e.data); } catch (_) {}
-                    emitSseLog(e.type || 'message', data);
-                };
-                es.onerror = () => {
-                    emitSseLog('DISCONNECTED', 'EventSource closed or backend offline.');
-                    disconnectSse();
-                };
-            }
+            const url = `${getBaseUrl()}/events`;
+            const es = new EventSource(url);
+            state.eventSource = es;
+            es.onopen = () => emitSseLog('CONNECTED', { stream: url });
+            es.onmessage = (e) => {
+                let data = e.data;
+                try { data = JSON.parse(e.data); } catch (_) {}
+                emitSseLog(e.type || 'message', data);
+                loadTrendingAndCatalog();
+                renderCart();
+            };
+            es.onerror = () => {
+                emitSseLog('DISCONNECTED', 'EventSource closed or backend offline.');
+                disconnectSse();
+            };
         }
 
         function disconnectSse() {
             if (state.eventSource) {
                 state.eventSource.close();
                 state.eventSource = null;
-            }
-            if (state.mockSseTimer) {
-                clearInterval(state.mockSseTimer);
-                state.mockSseTimer = null;
             }
             state.sseConnected = false;
             dom.navSseDot.className = 'w-2 h-2 rounded-full bg-slate-400';
@@ -1307,51 +1194,39 @@
         }
 
         // =========================================================================
-        // 9. MODE SWITCHING & EVENT LISTENERS
+        // 9. BACKEND HEALTH CHECK & EVENT LISTENERS
         // =========================================================================
-        function setDemoMode(enabled, notify = true) {
-            state.demoMode = enabled;
-            dom.demoModeToggle.setAttribute('aria-checked', String(enabled));
-            if (enabled) {
-                dom.demoModeToggle.className = 'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-amber-500 transition-colors duration-200 focus:outline-none';
-                dom.demoModeKnob.className = 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 translate-x-4';
-                dom.modeBadgeLabel.textContent = 'Demo Storefront';
-                dom.modeBadgeLabel.className = 'font-mono text-[11px] text-amber-300 font-medium';
-                if (notify) showToast('Demo Storefront Mode', 'Simulated Spring + Valkey catalog active.', 'info');
-            } else {
-                dom.demoModeToggle.className = 'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-[#6DB33F] transition-colors duration-200 focus:outline-none';
-                dom.demoModeKnob.className = 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 translate-x-0';
-                dom.modeBadgeLabel.textContent = 'Live Spring API';
-                dom.modeBadgeLabel.className = 'font-mono text-[11px] text-[#6DB33F] font-medium';
-                if (notify) showToast('Live Spring API Mode', `Connected to ${getBaseUrl()}`, 'success');
-            }
-            connectSse();
-            loadTrendingAndCatalog();
-        }
-
-        async function pingBackend(silentAutoDetect = false) {
+        async function pingBackend(silent = false) {
             try {
                 const controller = new AbortController();
                 const timer = setTimeout(() => controller.abort(), 1600);
                 const res = await fetch(`${getBaseUrl()}/popular?limit=1`, { signal: controller.signal });
                 clearTimeout(timer);
                 if (res.ok) {
-                    if (silentAutoDetect && state.demoMode) setDemoMode(false, false);
-                    if (!silentAutoDetect) showToast('Spring Boot Online', `Reachable at ${getBaseUrl()}`, 'success');
+                    dom.backendStatusDot.className = 'w-2 h-2 rounded-full bg-[#6DB33F]';
+                    dom.connectionStatusLabel.textContent = 'Live Spring API';
+                    dom.connectionStatusLabel.className = 'font-mono text-[11px] text-[#6DB33F] font-medium';
+                    if (!silent) showToast('Spring Boot Online', `Reachable at ${getBaseUrl()}`, 'success');
                     return true;
                 }
                 throw new Error(`HTTP ${res.status}`);
             } catch (_) {
-                if (!silentAutoDetect) {
-                    showToast('Backend Offline', `Could not reach ${getBaseUrl()}. Using Demo Storefront.`, 'error');
+                dom.backendStatusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
+                dom.connectionStatusLabel.textContent = 'API Offline';
+                dom.connectionStatusLabel.className = 'font-mono text-[11px] text-rose-400 font-medium';
+                if (!silent) {
+                    showToast('Backend Offline', `Could not reach ${getBaseUrl()}.`, 'error');
                 }
                 return false;
             }
         }
 
         // Wire Event Listeners
-        dom.demoModeToggle.addEventListener('click', () => setDemoMode(!state.demoMode, true));
-        dom.pingBackendBtn.addEventListener('click', () => pingBackend(false));
+        dom.pingBackendBtn.addEventListener('click', () => {
+            pingBackend(false);
+            connectSse();
+            loadTrendingAndCatalog();
+        });
 
         dom.navLookupForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1377,9 +1252,18 @@
         dom.modalUpdatePriceForm.addEventListener('submit', handleModalPriceUpdate);
 
         // Add Product Modal Listeners
-        dom.openAddProductModalBtn.addEventListener('click', () => dom.addProductModal.classList.remove('hidden'));
+        dom.openAddProductModalBtn.addEventListener('click', () => {
+            updatePayloadPreview();
+            dom.addProductModal.classList.remove('hidden');
+        });
         dom.closeAddProductModalBtn.addEventListener('click', () => dom.addProductModal.classList.add('hidden'));
         dom.cancelAddProductBtn.addEventListener('click', () => dom.addProductModal.classList.add('hidden'));
+        dom.addProductModal.addEventListener('click', (e) => {
+            if (e.target === dom.addProductModal) dom.addProductModal.classList.add('hidden');
+        });
+        [dom.postIdInput, dom.postNameInput, dom.postCategoryInput, dom.postPriceInput, dom.postStockInput, dom.postUpdatedAtInput].forEach(input => {
+            input.addEventListener('input', updatePayloadPreview);
+        });
         dom.createProductForm.addEventListener('submit', handleCreateProduct);
 
         // Cart Drawer Listeners
@@ -1407,8 +1291,6 @@
             if (state.sseConnected) disconnectSse();
             else connectSse();
         });
-        dom.sseSimulateBtn.addEventListener('click', simulateStoreEvent);
-        dom.tickerSimulateBtn.addEventListener('click', simulateStoreEvent);
         dom.sseClearBtn.addEventListener('click', () => {
             dom.sseEventLog.innerHTML = '';
             state.sseEventCount = 0;
@@ -1417,11 +1299,11 @@
 
         // Boot Storefront
         window.addEventListener('DOMContentLoaded', async () => {
-            seedStorefront();
+            updatePayloadPreview();
             renderCart();
             await pingBackend(true);
             connectSse();
-            await inspectProduct('prod-101', false);
+            await loadTrendingAndCatalog();
         });
     })();
 </script>
