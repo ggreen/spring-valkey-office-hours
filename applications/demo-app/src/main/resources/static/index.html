@@ -3,168 +3,1427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spring GemFire Office Hours</title>
-    <style>
-        *, *::before, *::after {
-            box-sizing: border-box;
+    <title>SpringStore — Official Spring & Valkey Gear Storefront</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans, Inter & JetBrains Mono (Spring.io typography pairing) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        spring: {
+                            green: '#6DB33F',
+                            dark: '#5FA134',
+                            tint: '#F1F8EC',
+                            soft: '#E7F4DF',
+                            ink: '#191E1E',
+                            charcoal: '#262A2D',
+                        }
+                    }
+                }
+            }
         }
-        @page {
-            size: A4;
-            margin: 15mm 12mm;
-            background-color: #1c1c1c; /* Dark theme canvas match */
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #1c1c1c;
-            color: #e3e3e3;
-            margin: 0;
-            padding: 0;
-            font-size: 11pt;
-            line-height: 1.5;
-        }
-        .container {
-            max-width: 100%;
-        }
-        a {
-            color: white;
-        }
-        /* Top Banner Accent */
-        .header-banner {
-            background-color: #242424;
-            border-bottom: 3px solid #6db33f; /* Spring Green */
-            padding: 25px 20px;
-            margin-bottom: 25px;
-            border-radius: 4px;
-        }
-        .header-banner h1 {
-            color: #ffffff;
-            font-size: 22pt;
-            margin: 0 0 5px 0;
-            font-weight: 700;
-        }
-        .header-banner .subtitle {
-            color: #9cb6d4; /* Soft muted blue-grey */
-            font-size: 12pt;
-            margin: 0;
-        }
-        h2 {
-            color: white; /* Spring Green */
-            font-size: 14pt;
-            margin-top: 25px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #333333;
-            padding-bottom: 5px;
-            page-break-after: avoid;
-        }
-        p {
-            margin: 0 0 12px 0;
-            color: #d1d1d1;
-        }
-        .grid-info {
-            display: table;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        .grid-row {
-            display: table-row;
-        }
-        .grid-cell {
-            display: table-cell;
-            padding: 10px;
-            background-color: #242424;
-            border: 1px solid #2d2d2d;
-            vertical-align: top;
-        }
-        .grid-cell.label {
-            width: 25%;
-            font-weight: bold;
-            color: white;
-        }
-        .agenda-box {
-            background-color: #242424;
-            border-left: 4px solid #6db33f;
-            padding: 15px;
-            margin-bottom: 15px;
-            page-break-inside: avoid;
-        }
-        .agenda-title {
-            font-weight: bold;
-            color: #ffffff;
-            font-size: 12pt;
-            margin-bottom: 5px;
-        }
-        ul {
-            margin: 0 0 15px 0;
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 6px;
-            color: #d1d1d1;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 15px;
-            border-top: 1px solid #333333;
-            text-align: center;
-            font-size: 9pt;
-            color: #777777;
-        }
-        .badge {
-            display: inline-block;
-            background-color: #34495e;
-            color: #ffffff;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 9pt;
-            font-weight: bold;
-        }
-    </style>
+    </script>
 </head>
-<body>
+<body class="bg-[#F8F9FA] text-[#191E1E] min-h-screen flex flex-col antialiased selection:bg-[#E7F4DF] selection:text-[#191E1E]">
 
-<div class="container">
-    <div class="header-banner">
-        <h1>Spring GemFire Office Hours</h1>
-        <div class="subtitle">Architecture, Development & Scale Architecture Engineering Sync</div>
-        <div class="subtitle"><a href="swagger-ui/index.html">swagger-ui</a></div>
-    </div>
+<!-- Toast Notification Container -->
+<div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"></div>
 
-    <div>
-        <img src="imgs/spring-gemfire-use-cases.png" height="446" width="1193"/></div>
-
-    <h2>Session Logistics</h2>
-    <div class="grid-info">
-        <div class="grid-row">
-            <div class="grid-cell label">Target Audience</div>
-            <div class="grid-cell">Spring Developers, Data Engineers, Cluster Administrators, Architect Champions</div>
-
+<!-- 1. SLIM SPRING DEVELOPER UTILITY BAR (API Connection, Mode & Telemetry Drawer Toggle) -->
+<div class="bg-[#191E1E] text-white border-b border-white/10 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-3">
+        <!-- Left: Spring Boot Controller Status -->
+        <div class="flex items-center gap-3 flex-wrap">
+                <span class="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#6DB33F] font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-[#6DB33F]"></span>
+                    Spring Web API
+                </span>
+            <span class="text-white/25 hidden sm:inline">|</span>
+            <div class="flex items-center bg-white/10 rounded-lg px-2.5 py-1 border border-white/10 focus-within:border-[#6DB33F]">
+                <span class="font-mono text-[10px] text-slate-400 mr-1.5">BASE</span>
+                <input
+                        id="baseUrlInput"
+                        type="text"
+                        value="/api"
+                        aria-label="Spring Boot Base API URL"
+                        class="bg-transparent font-mono text-[11px] text-white focus:outline-none w-44 sm:w-52"
+                />
+                <button id="pingBackendBtn" type="button" class="ml-1.5 px-1.5 py-0.5 rounded bg-white/15 hover:bg-[#6DB33F] hover:text-[#191E1E] text-[10px] font-mono font-semibold transition">
+                    Ping
+                </button>
+            </div>
         </div>
-    </div>
 
-    <h2>Core Objectives</h2>
-    <p>This recurring office hours session serves as an open engineering forum dedicated to exploring Spring Framework integrations with Tanzu GemFire. Bring your topology, configuration, performance, and scaling challenges directly to the project maintainers and subject matter experts.</p>
+        <!-- Right: Demo Switcher & Live SSE Telemetry Drawer Button -->
+        <div class="flex items-center gap-3">
+            <!-- Live SSE Feed Toggle Pill -->
+            <button
+                    id="openSseDrawerBtn"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-[11px] font-mono transition"
+            >
+                <span id="navSseDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                <span>SSE Stream</span>
+                <span id="sseEventCountBadge" class="px-1.5 py-0.2 rounded-full bg-[#6DB33F]/20 text-[#6DB33F] font-bold">0</span>
+            </button>
 
-    <h2>Typical Agenda Architecture</h2>
-
-    <div class="agenda-box">
-        <div class="agenda-title">Office Hours Activities & Topics</div>
-        <ul>
-            <li>Put & Get</li>
-            <li>Performance Test</li>
-            <li>Load Data</li>
-            <li>Queries</li>
-            <li>Event/ Continuous Queries</li>
-            <li>Distribute Types</li>
-            <li>Artificial Intelligence</li>
-        </ul>
-    </div>
-
-
-
-    <div class="footer">
-        Spring & GemFire Community Collaboration © 2026. Built utilizing official spring.io design palette principles.
+            <!-- Demo / Live Mode Switch -->
+            <div class="flex items-center gap-2">
+                <span id="modeBadgeLabel" class="font-mono text-[11px] text-amber-300 font-medium">Demo Storefront</span>
+                <button
+                        id="demoModeToggle"
+                        type="button"
+                        role="switch"
+                        aria-checked="true"
+                        aria-label="Toggle Demo Storefront Mode"
+                        class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-amber-500 transition-colors duration-200 focus:outline-none"
+                >
+                    <span id="demoModeKnob" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 translate-x-4"></span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- 2. MAIN SPRING.IO STYLED STOREFRONT NAVBAR -->
+<header class="bg-white border-b border-slate-200/90 sticky top-0 z-30 shadow-2xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between gap-4">
+
+        <!-- Brand Wordmark with Spring Leaf Hexagon SVG -->
+        <a href="#top" id="brandHomeBtn" class="flex items-center gap-2.5 group shrink-0">
+            <div class="w-10 h-10 rounded-xl bg-[#6DB33F] flex items-center justify-center shadow-sm group-hover:bg-[#5FA134] transition">
+                <!-- Signature Spring Leaf Hexagon Mark -->
+                <svg class="w-6 h-6 text-white" viewBox="0 0 32 32" fill="none">
+                    <path d="M16 2.5L28 9.5V22.5L16 29.5L4 22.5V9.5L16 2.5Z" stroke="currentColor" stroke-width="2.2" fill="none"/>
+                    <path d="M22.5 11.2C20.2 10.6 15.1 10.7 11.8 14C8.9 16.9 9.1 20.8 10.3 22.4C11.4 19.6 14.3 16.9 18.4 15.7C15.5 17.5 13.1 19.9 11.9 22.8C14.7 23.6 18.8 23.1 21.3 20.1C23.5 17.4 23.3 13.1 22.5 11.2Z" fill="currentColor"/>
+                </svg>
+            </div>
+            <div class="flex flex-col">
+                <div class="flex items-center gap-1.5">
+                    <span class="font-display font-extrabold text-xl tracking-tight text-[#191E1E]">Spring<span class="text-[#6DB33F]">Store</span></span>
+                    <span class="hidden sm:inline-block text-[10px] font-mono font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#F1F8EC] text-[#5FA134] border border-[#6DB33F]/30">by Pivotal/VMware</span>
+                </div>
+                <span class="text-[11px] text-slate-500 hidden sm:inline">Developer Hardware & Merch Catalog</span>
+            </div>
+        </a>
+
+        <!-- Instant Product ID Lookup Bar (Calls GET /api/products/{id}) -->
+        <form id="navLookupForm" class="flex-1 max-w-md hidden md:flex items-center">
+            <div class="relative w-full">
+                <input
+                        id="navLookupInput"
+                        type="text"
+                        placeholder="Lookup product by ID (e.g. prod-101)..."
+                        class="w-full pl-10 pr-24 py-2 rounded-full bg-[#F8F9FA] border border-slate-300 text-sm text-[#191E1E] placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6DB33F] focus:border-[#6DB33F] transition"
+                />
+                <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <button
+                        type="submit"
+                        class="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1 rounded-full bg-[#191E1E] hover:bg-[#6DB33F] text-white text-xs font-semibold transition"
+                >
+                    Inspect
+                </button>
+            </div>
+        </form>
+
+        <!-- Storefront Action Buttons: Add Product + Cart -->
+        <div class="flex items-center gap-2.5 shrink-0">
+            <button
+                    id="openAddProductModalBtn"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-slate-300 hover:border-[#6DB33F] bg-white hover:bg-[#F1F8EC] text-[#191E1E] text-xs sm:text-sm font-semibold transition"
+            >
+                <svg class="w-4 h-4 text-[#6DB33F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>New Product</span>
+            </button>
+
+            <button
+                    id="openCartDrawerBtn"
+                    type="button"
+                    class="relative inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white text-xs sm:text-sm font-semibold shadow-xs transition"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span class="hidden sm:inline">Cart</span>
+                <span id="cartCountBadge" class="px-1.5 py-0.5 rounded-full bg-[#191E1E] text-white font-mono text-[11px] leading-none">0</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Search Row -->
+    <div class="md:hidden px-4 pb-3">
+        <form id="mobileLookupForm" class="relative w-full">
+            <input
+                    id="mobileLookupInput"
+                    type="text"
+                    placeholder="Inspect Product ID (e.g. prod-101)..."
+                    class="w-full pl-9 pr-20 py-2 rounded-full bg-[#F8F9FA] border border-slate-300 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6DB33F]"
+            />
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <button type="submit" class="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1 rounded-full bg-[#191E1E] text-white text-xs font-semibold">
+                Go
+            </button>
+        </form>
+    </div>
+</header>
+
+<!-- 3. LIVE STOREFRONT TICKER BANNER (Connected to GET /api/events SSE) -->
+<div class="bg-[#F1F8EC] border-b border-[#6DB33F]/25">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 min-w-0">
+            <span class="px-2 py-0.5 rounded-full bg-[#6DB33F] text-white font-mono text-[10px] font-bold uppercase tracking-wider shrink-0">LIVE FEED</span>
+            <p id="liveTickerText" class="text-[#191E1E] font-medium truncate">
+                Real-time Valkey/Redis view leaderboard & <code class="font-mono text-[#5FA134]">/api/events</code> SSE stream active.
+            </p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+            <button id="tickerSimulateBtn" type="button" class="text-[#5FA134] hover:text-[#191E1E] font-semibold underline">
+                Simulate Live Price Drop
+            </button>
+            <button id="tickerViewLogBtn" type="button" class="font-mono text-[11px] text-slate-600 hover:text-[#191E1E]">
+                View Stream →
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 4. SPRING.IO HERO BANNER -->
+<section id="top" class="relative bg-white border-b border-slate-200 overflow-hidden">
+    <!-- Decorative Spring.io Geometric Leaf Shapes -->
+    <div class="pointer-events-none absolute -right-24 -top-24 w-96 h-96 rounded-full bg-[#F1F8EC] opacity-80"></div>
+    <div class="pointer-events-none absolute right-24 bottom-0 w-64 h-64 rounded-tl-[100px] bg-[#E7F4DF]/60"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div class="lg:col-span-7 space-y-5">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F1F8EC] border border-[#6DB33F]/30 text-[#5FA134] text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-[#6DB33F] animate-pulse"></span>
+                    Powered by Spring Boot + Valkey Sorted Sets
+                </div>
+                <h1 class="font-display font-extrabold text-3xl sm:text-5xl tracking-tight text-[#191E1E] leading-[1.12]">
+                    Build fast. Ship clean.<br/>
+                    <span class="text-[#6DB33F]">Gear up for production.</span>
+                </h1>
+                <p class="text-slate-600 text-base sm:text-lg max-w-2xl leading-relaxed">
+                    Browse developer hardware and Spring essentials. Every product view updates our real-time <code class="font-mono text-sm bg-slate-100 px-1.5 py-0.5 rounded text-[#191E1E]">catalog:views</code> Valkey leaderboard with sub-millisecond <code class="font-mono text-sm bg-slate-100 px-1.5 py-0.5 rounded text-[#191E1E]">X-Elapsed-Ms</code> response telemetry.
+                </p>
+                <div class="flex flex-wrap items-center gap-3 pt-1">
+                    <a href="#catalogSection" class="px-6 py-3 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white font-semibold text-sm shadow-sm transition">
+                        Shop Catalog
+                    </a>
+                    <a href="#trendingSection" class="px-6 py-3 rounded-full bg-white hover:bg-slate-50 text-[#191E1E] border border-slate-300 font-semibold text-sm transition">
+                        View Most Popular
+                    </a>
+                    <button id="heroTest404Btn" type="button" class="px-4 py-3 rounded-full text-slate-500 hover:text-rose-600 font-mono text-xs transition">
+                        Test 404 Lookup
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Hero Card: Last Inspected Product Telemetry Spotlight -->
+            <div class="lg:col-span-5">
+                <div id="heroSpotlightCard" class="bg-white rounded-2xl border border-slate-200 shadow-lg p-6 relative">
+                    <div class="flex items-center justify-between gap-2 pb-4 border-b border-slate-100">
+                        <div>
+                            <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Live Lookup Telemetry</span>
+                            <h2 class="font-display font-bold text-base text-[#191E1E]">GET /api/products/{id}</h2>
+                        </div>
+                        <span id="heroElapsedBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F1F8EC] border border-[#6DB33F]/40 text-[#5FA134] font-mono text-xs font-bold">
+                                ⚡ <span id="heroElapsedValue">0.42</span> ms
+                            </span>
+                    </div>
+
+                    <div id="heroSpotlightBody" class="pt-4">
+                        <!-- Populated dynamically with latest inspected product -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. MAIN STOREFRONT CONTENT -->
+<main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+
+    <!-- TRENDING / MOST VIEWED SECTION (GET /api/popular?limit=N) -->
+    <section id="trendingSection" class="space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#6DB33F]"></span>
+                    <span class="font-mono text-xs font-semibold uppercase tracking-wider text-[#5FA134]">Valkey ZSET · catalog:views</span>
+                </div>
+                <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-[#191E1E] mt-1">Trending Now · Most Viewed</h2>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <label for="popularLimitSelect" class="text-xs font-medium text-slate-600">Show top:</label>
+                <select
+                        id="popularLimitSelect"
+                        class="rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-[#191E1E] focus:outline-none focus:ring-2 focus:ring-[#6DB33F]"
+                >
+                    <option value="3">Top 3 Items</option>
+                    <option value="5" selected>Top 5 Items</option>
+                    <option value="10">Top 10 Items</option>
+                </select>
+                <button
+                        id="refreshPopularBtn"
+                        type="button"
+                        title="Refresh Popular Ranking"
+                        class="p-2 rounded-full border border-slate-300 bg-white hover:border-[#6DB33F] hover:text-[#6DB33F] text-slate-600 transition"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Horizontal / Responsive Trending Cards Grid -->
+        <div id="trendingGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Populated dynamically from GET /api/popular -->
+        </div>
+    </section>
+
+    <!-- FULL PRODUCT CATALOG GRID -->
+    <section id="catalogSection" class="space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+            <div>
+                <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-[#191E1E]">All Storefront Products</h2>
+                <p class="text-sm text-slate-500 mt-0.5">Click any product to fetch live details (<code class="font-mono text-xs">GET /products/{id}</code>), increment views, or adjust pricing.</p>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div id="categoryFilterBar" class="flex items-center flex-wrap gap-2">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Storefront Product Cards Grid -->
+        <div id="catalogGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Populated dynamically -->
+        </div>
+    </section>
+
+</main>
+
+<!-- 6. SPRING.IO FOOTER -->
+<footer class="bg-[#191E1E] text-slate-400 border-t border-white/10 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+        <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-[#6DB33F] flex items-center justify-center text-white font-display font-extrabold text-sm">S</div>
+            <span class="text-white font-semibold">SpringStore</span>
+            <span>· Spring Web + Valkey/Redis REST Storefront</span>
+        </div>
+        <div class="flex items-center gap-4 font-mono text-[11px]">
+            <span>GET /products/{id}</span>
+            <span>PUT /products/{id}/price</span>
+            <span>GET /popular</span>
+            <span>GET /events</span>
+            <span>POST /products/product</span>
+        </div>
+    </div>
+</footer>
+
+<!-- ===================================================================== -->
+<!-- MODAL 1: PRODUCT QUICK-VIEW & INLINE PRICE UPDATE (GET + PUT)         -->
+<!-- ===================================================================== -->
+<div id="productDetailModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-fadeIn">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 bg-[#F8F9FA] border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span id="modalProductSku" class="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-[#F1F8EC] text-[#5FA134] border border-[#6DB33F]/30">prod-101</span>
+                <span id="modalElapsedPill" class="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700">X-Elapsed-Ms: 0.41 ms</span>
+            </div>
+            <button id="closeProductModalBtn" type="button" class="w-8 h-8 rounded-full bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#191E1E] transition">
+                ✕
+            </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="p-6 sm:p-8 space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+                <div id="modalProductArtwork" class="sm:col-span-5 aspect-square rounded-2xl bg-[#F8F9FA] border border-slate-200 flex items-center justify-center p-6">
+                    <!-- SVG Product Illustration -->
+                </div>
+                <div class="sm:col-span-7 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span id="modalProductCategory" class="text-xs font-semibold uppercase tracking-wider text-[#6DB33F]">Category</span>
+                        <span class="text-slate-300">•</span>
+                        <span id="modalProductViews" class="font-mono text-xs text-slate-500">0 views</span>
+                    </div>
+                    <h3 id="modalProductName" class="font-display font-extrabold text-2xl text-[#191E1E]">Product Name</h3>
+                    <p id="modalProductDesc" class="text-sm text-slate-600 leading-relaxed">Description</p>
+                    <div class="pt-2 flex items-baseline gap-3">
+                        <span id="modalProductPrice" class="font-display font-extrabold text-3xl text-[#191E1E]">$0.00</span>
+                        <span class="text-xs text-[#5FA134] font-medium">In Stock · Ready to Ship</span>
+                    </div>
+
+                    <div class="pt-2 flex flex-wrap gap-2.5">
+                        <button id="modalAddToCartBtn" type="button" class="flex-1 py-2.5 px-5 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white font-semibold text-sm shadow-xs transition">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inline Store Admin Price Update (PUT /api/products/{id}/price?price=...) -->
+            <div class="rounded-2xl bg-[#F8F9FA] border border-slate-200 p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-[#191E1E]">Merchant Price Adjustment</span>
+                    <span class="font-mono text-[11px] text-slate-500">PUT /api/products/{id}/price</span>
+                </div>
+                <form id="modalUpdatePriceForm" class="flex flex-col sm:flex-row gap-2.5">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-mono text-sm">$</span>
+                        <input
+                                id="modalNewPriceInput"
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                required
+                                class="w-full pl-8 pr-3 py-2 rounded-full bg-white border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]"
+                        />
+                    </div>
+                    <button type="submit" class="px-5 py-2 rounded-full bg-[#191E1E] hover:bg-[#6DB33F] text-white font-semibold text-xs sm:text-sm transition">
+                        Update Price
+                    </button>
+                </form>
+            </div>
+
+            <!-- Collapsible Raw JSON Payload -->
+            <details class="group">
+                <summary class="cursor-pointer text-xs font-mono text-slate-500 hover:text-[#191E1E] select-none">
+                    Inspect Raw JSON Response ▾
+                </summary>
+                <pre id="modalRawJson" class="mt-2 rounded-xl bg-[#191E1E] text-emerald-300 p-3.5 text-xs font-mono overflow-x-auto"></pre>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- MODAL 2: ADD NEW PRODUCT TO CATALOG (POST /api/products/product)      -->
+<!-- ===================================================================== -->
+<div id="addProductModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden">
+        <div class="px-6 py-4 bg-[#F8F9FA] border-b border-slate-200 flex items-center justify-between">
+            <div>
+                <h3 class="font-display font-bold text-lg text-[#191E1E]">Publish New Storefront Product</h3>
+                <p class="font-mono text-[11px] text-slate-500">POST /api/products/product</p>
+            </div>
+            <button id="closeAddProductModalBtn" type="button" class="w-8 h-8 rounded-full bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500">✕</button>
+        </div>
+
+        <form id="createProductForm" class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="postIdInput" class="block text-xs font-semibold text-slate-700 mb-1">Product ID / SKU</label>
+                    <input id="postIdInput" type="text" required placeholder="prod-107" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                </div>
+                <div>
+                    <label for="postPriceInput" class="block text-xs font-semibold text-slate-700 mb-1">Price (USD)</label>
+                    <input id="postPriceInput" type="number" step="0.01" min="0.01" required placeholder="49.00" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+                </div>
+            </div>
+
+            <div>
+                <label for="postNameInput" class="block text-xs font-semibold text-slate-700 mb-1">Product Title</label>
+                <input id="postNameInput" type="text" required placeholder="Spring Boot Leaf Hoodie" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]" />
+            </div>
+
+            <div>
+                <label for="postCategoryInput" class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                <select id="postCategoryInput" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]">
+                    <option value="Apparel">Apparel</option>
+                    <option value="Hardware">Hardware</option>
+                    <option value="Peripherals">Peripherals</option>
+                    <option value="Accessories">Accessories</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="postDescInput" class="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+                <textarea id="postDescInput" rows="2" placeholder="Heavyweight organic cotton hoodie with embroidered Spring leaf logo." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#6DB33F]"></textarea>
+            </div>
+
+            <div class="pt-2 flex items-center justify-end gap-2.5">
+                <button id="cancelAddProductBtn" type="button" class="px-4 py-2.5 rounded-full border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white text-xs font-semibold shadow-xs transition">
+                    Save to Catalog
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- DRAWER 1: SHOPPING CART SLIDE-OVER                                    -->
+<!-- ===================================================================== -->
+<div id="cartDrawer" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end">
+    <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <h3 class="font-display font-bold text-lg text-[#191E1E]">Your Cart</h3>
+                <span id="drawerCartCount" class="px-2 py-0.5 rounded-full bg-[#F1F8EC] text-[#5FA134] font-mono text-xs font-bold">0</span>
+            </div>
+            <button id="closeCartDrawerBtn" type="button" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500">✕</button>
+        </div>
+
+        <div id="cartItemsContainer" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <!-- Populated dynamically -->
+        </div>
+
+        <div class="p-6 border-t border-slate-200 bg-[#F8F9FA] space-y-4">
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">Subtotal</span>
+                <span id="cartSubtotalText" class="font-display font-extrabold text-xl text-[#191E1E]">$0.00</span>
+            </div>
+            <button id="checkoutCartBtn" type="button" class="w-full py-3 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white font-semibold text-sm shadow-sm transition">
+                Checkout Order
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- DRAWER 2: LIVE SSE EVENTS STREAM (GET /api/events)                    -->
+<!-- ===================================================================== -->
+<div id="sseDrawer" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end">
+    <div class="bg-[#191E1E] text-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between border-l border-white/10">
+        <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded bg-[#6DB33F]/20 text-[#6DB33F] font-mono text-[11px] font-bold">SSE</span>
+                    <h3 class="font-display font-bold text-base">GET /api/events</h3>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Live <code class="text-slate-300">text/event-stream</code> storefront updates</p>
+            </div>
+            <button id="closeSseDrawerBtn" type="button" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300">✕</button>
+        </div>
+
+        <div class="px-6 py-3 bg-black/30 border-b border-white/10 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <button id="sseToggleBtn" type="button" class="px-3 py-1.5 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white text-xs font-semibold transition">
+                    Disconnect
+                </button>
+                <button id="sseSimulateBtn" type="button" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition">
+                    + Simulate Event
+                </button>
+            </div>
+            <button id="sseClearBtn" type="button" class="text-xs font-mono text-slate-400 hover:text-white">Clear</button>
+        </div>
+
+        <div id="sseEventLog" class="flex-1 overflow-y-auto p-5 font-mono text-xs space-y-3">
+            <!-- Live SSE Event Cards -->
+        </div>
+    </div>
+</div>
+
+<!-- Application Logic -->
+<script>
+    (() => {
+        // =========================================================================
+        // 1. INITIAL STOREFRONT CATALOG & STATE
+        // =========================================================================
+        const INITIAL_PRODUCTS = [
+            {
+                id: 'prod-101',
+                name: 'Spring Leaf Mechanical Keyboard',
+                price: 189.00,
+                category: 'Peripherals',
+                description: 'Custom 75% CNC aluminum mechanical keyboard with tactile green switches and QMK/VIA firmware.'
+            },
+            {
+                id: 'prod-102',
+                name: 'Valkey NVMe Gen5 2TB Drive',
+                price: 249.99,
+                category: 'Hardware',
+                description: 'Sub-millisecond enterprise M.2 solid-state storage engineered for high-throughput in-memory persistence.'
+            },
+            {
+                id: 'prod-103',
+                name: 'Spring Boot Developer Hoodie',
+                price: 68.00,
+                category: 'Apparel',
+                description: 'Heavyweight 450gsm organic French terry hoodie in Spring Charcoal with embroidered leaf emblem.'
+            },
+            {
+                id: 'prod-104',
+                name: 'Thunderbolt 4 Workstation Dock',
+                price: 279.00,
+                category: 'Hardware',
+                description: '12-port aluminum dock supporting dual 4K 120Hz displays, 2.5GbE Ethernet, and 96W host charging.'
+            },
+            {
+                id: 'prod-105',
+                name: 'Reactive Streams Insulated Tumbler',
+                price: 32.50,
+                category: 'Accessories',
+                description: 'Double-wall vacuum-insulated matte stainless steel tumbler with laser-etched Spring hexagon mark.'
+            },
+            {
+                id: 'prod-106',
+                name: 'Cloud Native Desk Mat XL',
+                price: 42.00,
+                category: 'Peripherals',
+                description: '900x400mm micro-weave stitched desk mat featuring subtle Spring architecture blueprint grid lines.'
+            }
+        ];
+
+        const INITIAL_VIEWS = {
+            'prod-101': 84,
+            'prod-102': 67,
+            'prod-103': 53,
+            'prod-104': 39,
+            'prod-105': 28,
+            'prod-106': 19
+        };
+
+        const state = {
+            demoMode: true,
+            mockDb: new Map(),
+            mockViews: new Map(),
+            lookupHits: new Map(),
+            activeCategory: 'All',
+            activeModalProductId: null,
+            cart: new Map(), // id -> qty
+            sseConnected: false,
+            eventSource: null,
+            mockSseTimer: null,
+            sseEventCount: 0
+        };
+
+        function seedStorefront() {
+            state.mockDb.clear();
+            state.mockViews.clear();
+            state.lookupHits.clear();
+            INITIAL_PRODUCTS.forEach(p => state.mockDb.set(p.id, { ...p }));
+            Object.entries(INITIAL_VIEWS).forEach(([id, v]) => state.mockViews.set(id, v));
+        }
+
+        // =========================================================================
+        // 2. DOM REFERENCES
+        // =========================================================================
+        const dom = {
+            baseUrlInput: document.getElementById('baseUrlInput'),
+            pingBackendBtn: document.getElementById('pingBackendBtn'),
+            demoModeToggle: document.getElementById('demoModeToggle'),
+            demoModeKnob: document.getElementById('demoModeKnob'),
+            modeBadgeLabel: document.getElementById('modeBadgeLabel'),
+
+            // Navbar & Search
+            navLookupForm: document.getElementById('navLookupForm'),
+            navLookupInput: document.getElementById('navLookupInput'),
+            mobileLookupForm: document.getElementById('mobileLookupForm'),
+            mobileLookupInput: document.getElementById('mobileLookupInput'),
+            heroTest404Btn: document.getElementById('heroTest404Btn'),
+
+            // Live Ticker
+            liveTickerText: document.getElementById('liveTickerText'),
+            tickerSimulateBtn: document.getElementById('tickerSimulateBtn'),
+            tickerViewLogBtn: document.getElementById('tickerViewLogBtn'),
+
+            // Hero Spotlight
+            heroElapsedValue: document.getElementById('heroElapsedValue'),
+            heroSpotlightBody: document.getElementById('heroSpotlightBody'),
+
+            // Trending & Catalog
+            popularLimitSelect: document.getElementById('popularLimitSelect'),
+            refreshPopularBtn: document.getElementById('refreshPopularBtn'),
+            trendingGrid: document.getElementById('trendingGrid'),
+            categoryFilterBar: document.getElementById('categoryFilterBar'),
+            catalogGrid: document.getElementById('catalogGrid'),
+
+            // Product Detail Modal
+            productDetailModal: document.getElementById('productDetailModal'),
+            closeProductModalBtn: document.getElementById('closeProductModalBtn'),
+            modalProductSku: document.getElementById('modalProductSku'),
+            modalElapsedPill: document.getElementById('modalElapsedPill'),
+            modalProductArtwork: document.getElementById('modalProductArtwork'),
+            modalProductCategory: document.getElementById('modalProductCategory'),
+            modalProductViews: document.getElementById('modalProductViews'),
+            modalProductName: document.getElementById('modalProductName'),
+            modalProductDesc: document.getElementById('modalProductDesc'),
+            modalProductPrice: document.getElementById('modalProductPrice'),
+            modalAddToCartBtn: document.getElementById('modalAddToCartBtn'),
+            modalUpdatePriceForm: document.getElementById('modalUpdatePriceForm'),
+            modalNewPriceInput: document.getElementById('modalNewPriceInput'),
+            modalRawJson: document.getElementById('modalRawJson'),
+
+            // Add Product Modal
+            openAddProductModalBtn: document.getElementById('openAddProductModalBtn'),
+            addProductModal: document.getElementById('addProductModal'),
+            closeAddProductModalBtn: document.getElementById('closeAddProductModalBtn'),
+            cancelAddProductBtn: document.getElementById('cancelAddProductBtn'),
+            createProductForm: document.getElementById('createProductForm'),
+            postIdInput: document.getElementById('postIdInput'),
+            postPriceInput: document.getElementById('postPriceInput'),
+            postNameInput: document.getElementById('postNameInput'),
+            postCategoryInput: document.getElementById('postCategoryInput'),
+            postDescInput: document.getElementById('postDescInput'),
+
+            // Cart Drawer
+            openCartDrawerBtn: document.getElementById('openCartDrawerBtn'),
+            cartDrawer: document.getElementById('cartDrawer'),
+            closeCartDrawerBtn: document.getElementById('closeCartDrawerBtn'),
+            cartCountBadge: document.getElementById('cartCountBadge'),
+            drawerCartCount: document.getElementById('drawerCartCount'),
+            cartItemsContainer: document.getElementById('cartItemsContainer'),
+            cartSubtotalText: document.getElementById('cartSubtotalText'),
+            checkoutCartBtn: document.getElementById('checkoutCartBtn'),
+
+            // SSE Drawer
+            openSseDrawerBtn: document.getElementById('openSseDrawerBtn'),
+            sseDrawer: document.getElementById('sseDrawer'),
+            closeSseDrawerBtn: document.getElementById('closeSseDrawerBtn'),
+            navSseDot: document.getElementById('navSseDot'),
+            sseEventCountBadge: document.getElementById('sseEventCountBadge'),
+            sseToggleBtn: document.getElementById('sseToggleBtn'),
+            sseSimulateBtn: document.getElementById('sseSimulateBtn'),
+            sseClearBtn: document.getElementById('sseClearBtn'),
+            sseEventLog: document.getElementById('sseEventLog'),
+
+            toastContainer: document.getElementById('toastContainer')
+        };
+
+        // =========================================================================
+        // 3. HELPERS & SPRING-THEMED PRODUCT SVG ILLUSTRATIONS
+        // =========================================================================
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatMoney(val) {
+            const n = Number(val);
+            return Number.isFinite(n) ? `$${n.toFixed(2)}` : `$${val}`;
+        }
+
+        function getBaseUrl() {
+            return dom.baseUrlInput.value.trim().replace(/\/+$/, '') || '/api';
+        }
+
+        function showToast(title, message, type = 'success') {
+            const styles = {
+                success: 'bg-[#191E1E] border-[#6DB33F] text-white',
+                error: 'bg-rose-950 border-rose-500 text-rose-50',
+                info: 'bg-[#191E1E] border-slate-600 text-white'
+            };
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto rounded-2xl border-l-4 px-4 py-3 shadow-xl transition-all duration-300 ${styles[type] || styles.success}`;
+            toast.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-xs font-bold text-[#6DB33F]">${escapeHtml(title)}</p>
+                            <p class="text-xs text-slate-200 mt-0.5">${escapeHtml(message)}</p>
+                        </div>
+                        <button type="button" class="text-xs text-slate-400 hover:text-white">✕</button>
+                    </div>
+                `;
+            toast.querySelector('button').addEventListener('click', () => toast.remove());
+            dom.toastContainer.appendChild(toast);
+            setTimeout(() => toast.remove(), 4200);
+        }
+
+        function getProductSvg(category) {
+            const cat = (category || '').toLowerCase();
+            if (cat.includes('apparel')) {
+                return `<svg class="w-20 h-20 text-[#191E1E]" viewBox="0 0 64 64" fill="none">
+                        <path d="M20 14L10 22L16 30L21 26V50H43V26L48 30L54 22L44 14C41 18 37 20 32 20C27 20 23 18 20 14Z" fill="#F1F8EC" stroke="#6DB33F" stroke-width="2.5" stroke-linejoin="round"/>
+                        <circle cx="32" cy="33" r="5" fill="#6DB33F"/>
+                    </svg>`;
+            }
+            if (cat.includes('hardware') || cat.includes('storage')) {
+                return `<svg class="w-20 h-20 text-[#191E1E]" viewBox="0 0 64 64" fill="none">
+                        <rect x="10" y="18" width="44" height="28" rx="6" fill="#F1F8EC" stroke="#191E1E" stroke-width="2.5"/>
+                        <rect x="17" y="25" width="14" height="14" rx="3" fill="#6DB33F"/>
+                        <line x1="37" y1="27" x2="47" y2="27" stroke="#191E1E" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="37" y1="33" x2="47" y2="33" stroke="#191E1E" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="37" y1="39" x2="43" y2="39" stroke="#6DB33F" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>`;
+            }
+            if (cat.includes('peripherals')) {
+                return `<svg class="w-20 h-20 text-[#191E1E]" viewBox="0 0 64 64" fill="none">
+                        <rect x="8" y="20" width="48" height="24" rx="5" fill="#F1F8EC" stroke="#191E1E" stroke-width="2.5"/>
+                        <rect x="14" y="26" width="5" height="5" rx="1" fill="#6DB33F"/>
+                        <rect x="22" y="26" width="5" height="5" rx="1" fill="#191E1E"/>
+                        <rect x="30" y="26" width="5" height="5" rx="1" fill="#191E1E"/>
+                        <rect x="38" y="26" width="5" height="5" rx="1" fill="#191E1E"/>
+                        <rect x="46" y="26" width="4" height="5" rx="1" fill="#6DB33F"/>
+                        <rect x="18" y="34" width="28" height="4" rx="1.5" fill="#6DB33F"/>
+                    </svg>`;
+            }
+            return `<svg class="w-20 h-20 text-[#191E1E]" viewBox="0 0 64 64" fill="none">
+                    <path d="M32 10L50 20.5V41.5L32 52L14 41.5V20.5L32 10Z" fill="#F1F8EC" stroke="#6DB33F" stroke-width="2.5"/>
+                    <path d="M40 24C37 23 30 23.5 26 27.5C22.5 31 23 36 24.5 38C26 34.5 29.5 31 35 29.5C31 31.8 28 34.8 26.5 38.5C30 39.5 35.5 39 38.5 35C41.5 31.5 41 26.5 40 24Z" fill="#6DB33F"/>
+                </svg>`;
+        }
+
+        // =========================================================================
+        // 4. API CALLS (GET /products/{id}, GET /popular, PUT /price, POST)
+        // =========================================================================
+        async function inspectProduct(id, openModal = true) {
+            const cleanId = (id || '').trim();
+            if (!cleanId) return;
+
+            try {
+                let product = null;
+                let elapsedMs = '0.45';
+
+                if (state.demoMode) {
+                    const hits = state.lookupHits.get(cleanId) || 0;
+                    state.lookupHits.set(cleanId, hits + 1);
+
+                    if (!state.mockDb.has(cleanId)) {
+                        throw { status: 404, error: `No product found with id: ${cleanId}` };
+                    }
+
+                    product = { ...state.mockDb.get(cleanId) };
+                    // Simulate redis.opsForZSet().incrementScore("catalog:views", id, 1)
+                    state.mockViews.set(cleanId, (state.mockViews.get(cleanId) || 0) + 1);
+                    elapsedMs = hits === 0
+                        ? (14.2 + Math.random() * 9).toFixed(2)
+                        : (0.29 + Math.random() * 0.55).toFixed(2);
+                } else {
+                    const t0 = performance.now();
+                    const res = await fetch(`${getBaseUrl()}/products/${encodeURIComponent(cleanId)}`);
+                    const t1 = performance.now();
+
+                    if (res.status === 404) {
+                        const errJson = await res.json().catch(() => ({ error: `Product '${cleanId}' not found` }));
+                        throw { status: 404, ...errJson };
+                    }
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                    const headerMs = res.headers.get('X-Elapsed-Ms');
+                    elapsedMs = headerMs !== null ? headerMs : (t1 - t0).toFixed(2);
+                    product = await res.json();
+                }
+
+                // Update Hero Telemetry Spotlight
+                updateHeroSpotlight(product, elapsedMs);
+
+                // Refresh Trending & Catalog views
+                await loadTrendingAndCatalog();
+
+                if (openModal) {
+                    openProductModal(product, elapsedMs);
+                }
+            } catch (err) {
+                if (err && err.status === 404) {
+                    showToast('404 Not Found (NoSuchElementException)', err.error || `Product '${cleanId}' does not exist.`, 'error');
+                } else {
+                    showToast('Lookup Failed', err.message || 'Could not retrieve product.', 'error');
+                }
+            }
+        }
+
+        function updateHeroSpotlight(product, elapsedMs) {
+            dom.heroElapsedValue.textContent = elapsedMs;
+            const views = state.mockViews.get(product.id) || 1;
+            dom.heroSpotlightBody.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-[#F8F9FA] border border-slate-200 flex items-center justify-center shrink-0">
+                            ${getProductSvg(product.category)}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-[11px] font-semibold text-[#5FA134] bg-[#F1F8EC] px-2 py-0.5 rounded">${escapeHtml(product.id)}</span>
+                                <span class="font-mono text-[11px] text-slate-400">${views} views</span>
+                            </div>
+                            <h3 class="font-display font-bold text-base text-[#191E1E] truncate mt-1">${escapeHtml(product.name)}</h3>
+                            <div class="flex items-center justify-between mt-1.5">
+                                <span class="font-display font-extrabold text-lg text-[#191E1E]">${formatMoney(product.price)}</span>
+                                <button type="button" data-quick-open="${escapeHtml(product.id)}" class="text-xs font-semibold text-[#6DB33F] hover:text-[#5FA134]">
+                                    Open Details →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            dom.heroSpotlightBody.querySelector('[data-quick-open]')?.addEventListener('click', () => {
+                inspectProduct(product.id, true);
+            });
+        }
+
+        async function loadTrendingAndCatalog() {
+            const limit = parseInt(dom.popularLimitSelect.value, 10) || 5;
+            let popularItems = [];
+
+            try {
+                if (state.demoMode) {
+                    popularItems = Array.from(state.mockViews.entries())
+                        .filter(([id]) => state.mockDb.has(id))
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, limit)
+                        .map(([id, views]) => ({
+                            product: { ...state.mockDb.get(id) },
+                            views
+                        }));
+                } else {
+                    const res = await fetch(`${getBaseUrl()}/popular?limit=${limit}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    popularItems = await res.json();
+                    // Sync live products into local catalog view
+                    popularItems.forEach(item => {
+                        if (item.product && item.product.id) {
+                            state.mockDb.set(item.product.id, item.product);
+                            state.mockViews.set(item.product.id, item.views);
+                        }
+                    });
+                }
+            } catch (err) {
+                showToast('API Error', `Could not load /popular: ${err.message}`, 'error');
+            }
+
+            renderTrendingGrid(popularItems);
+            renderCategoryPills();
+            renderCatalogGrid();
+        }
+
+        function renderTrendingGrid(items) {
+            if (!items || items.length === 0) {
+                dom.trendingGrid.innerHTML = `<div class="col-span-full text-center py-8 bg-white rounded-2xl border border-dashed border-slate-300 text-xs text-slate-500">No popularity scores recorded yet. Click any product to record a view!</div>`;
+                return;
+            }
+
+            dom.trendingGrid.innerHTML = items.map((entry, index) => {
+                const p = entry.product || {};
+                const views = entry.views ?? 0;
+                const isFirst = index === 0;
+
+                return `
+                        <div class="group bg-white rounded-2xl border ${isFirst ? 'border-[#6DB33F] ring-2 ring-[#6DB33F]/15' : 'border-slate-200'} p-4 flex flex-col justify-between hover:shadow-md hover:border-[#6DB33F] transition cursor-pointer" data-card-id="${escapeHtml(p.id)}">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-3">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold ${isFirst ? 'bg-[#6DB33F] text-white' : 'bg-slate-100 text-slate-700'}">
+                                        #${index + 1} ${isFirst ? 'Top Pick' : ''}
+                                    </span>
+                                    <span class="font-mono text-[11px] font-semibold text-[#5FA134] bg-[#F1F8EC] px-2 py-0.5 rounded-full">
+                                        ${views} views
+                                    </span>
+                                </div>
+                                <div class="h-24 rounded-xl bg-[#F8F9FA] flex items-center justify-center mb-3 group-hover:bg-[#F1F8EC]/60 transition">
+                                    ${getProductSvg(p.category)}
+                                </div>
+                                <h3 class="font-display font-bold text-sm text-[#191E1E] line-clamp-1 group-hover:text-[#5FA134] transition">${escapeHtml(p.name)}</h3>
+                                <p class="font-mono text-[11px] text-slate-400 mt-0.5">${escapeHtml(p.id)}</p>
+                            </div>
+
+                            <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
+                                <span class="font-display font-extrabold text-base text-[#191E1E]">${formatMoney(p.price)}</span>
+                                <span class="text-xs font-semibold text-[#6DB33F] group-hover:translate-x-0.5 transition">View →</span>
+                            </div>
+                        </div>
+                    `;
+            }).join('');
+
+            dom.trendingGrid.querySelectorAll('[data-card-id]').forEach(card => {
+                card.addEventListener('click', () => inspectProduct(card.getAttribute('data-card-id'), true));
+            });
+        }
+
+        function renderCategoryPills() {
+            const categories = ['All', ...new Set(Array.from(state.mockDb.values()).map(p => p.category || 'General'))];
+            dom.categoryFilterBar.innerHTML = categories.map(cat => {
+                const active = state.activeCategory === cat;
+                return `
+                        <button
+                            type="button"
+                            data-cat="${escapeHtml(cat)}"
+                            class="px-4 py-1.5 rounded-full text-xs font-semibold transition ${active ? 'bg-[#191E1E] text-white shadow-2xs' : 'bg-white border border-slate-300 text-slate-700 hover:border-[#6DB33F]'}"
+                        >
+                            ${escapeHtml(cat)}
+                        </button>
+                    `;
+            }).join('');
+
+            dom.categoryFilterBar.querySelectorAll('[data-cat]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.activeCategory = btn.getAttribute('data-cat');
+                    renderCategoryPills();
+                    renderCatalogGrid();
+                });
+            });
+        }
+
+        function renderCatalogGrid() {
+            const allProducts = Array.from(state.mockDb.values());
+            const filtered = state.activeCategory === 'All'
+                ? allProducts
+                : allProducts.filter(p => (p.category || 'General') === state.activeCategory);
+
+            dom.catalogGrid.innerHTML = filtered.map(p => {
+                const views = state.mockViews.get(p.id) || 0;
+                return `
+                        <article class="group bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-2xs hover:shadow-xl hover:border-[#6DB33F] transition-all duration-200 flex flex-col justify-between">
+                            <div>
+                                <!-- Product Visual Header -->
+                                <div class="relative h-48 bg-[#F8F9FA] group-hover:bg-[#F1F8EC]/50 border-b border-slate-100 flex items-center justify-center p-6 transition cursor-pointer" data-inspect-id="${escapeHtml(p.id)}">
+                                    <span class="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full bg-white border border-slate-200 font-mono text-[11px] font-semibold text-slate-600">
+                                        ${escapeHtml(p.id)}
+                                    </span>
+                                    <span class="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full bg-[#F1F8EC] border border-[#6DB33F]/30 font-mono text-[11px] font-semibold text-[#5FA134]">
+                                        👁 ${views}
+                                    </span>
+                                    <div class="transform group-hover:scale-105 transition duration-200">
+                                        ${getProductSvg(p.category)}
+                                    </div>
+                                </div>
+
+                                <!-- Product Copy -->
+                                <div class="p-6 pb-4">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#6DB33F]">${escapeHtml(p.category || 'Catalog')}</span>
+                                    <h3 class="font-display font-bold text-lg text-[#191E1E] mt-1 group-hover:text-[#5FA134] transition cursor-pointer" data-inspect-id="${escapeHtml(p.id)}">
+                                        ${escapeHtml(p.name)}
+                                    </h3>
+                                    <p class="text-sm text-slate-600 mt-1.5 line-clamp-2 leading-relaxed">
+                                        ${escapeHtml(p.description || 'Official Spring developer catalog item.')}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Price & Storefront Actions -->
+                            <div class="px-6 pb-6 pt-3 flex items-center justify-between gap-3 border-t border-slate-100">
+                                <div>
+                                    <span class="text-[11px] text-slate-400 block">Price</span>
+                                    <span class="font-display font-extrabold text-xl text-[#191E1E]">${formatMoney(p.price)}</span>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        data-inspect-id="${escapeHtml(p.id)}"
+                                        class="px-3.5 py-2 rounded-full border border-slate-300 hover:border-[#6DB33F] text-xs font-semibold text-[#191E1E] transition"
+                                    >
+                                        Details
+                                    </button>
+                                    <button
+                                        type="button"
+                                        data-cart-add="${escapeHtml(p.id)}"
+                                        class="px-4 py-2 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white text-xs font-semibold shadow-2xs transition"
+                                    >
+                                        + Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    `;
+            }).join('');
+
+            dom.catalogGrid.querySelectorAll('[data-inspect-id]').forEach(el => {
+                el.addEventListener('click', () => inspectProduct(el.getAttribute('data-inspect-id'), true));
+            });
+
+            dom.catalogGrid.querySelectorAll('[data-cart-add]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    addToCart(btn.getAttribute('data-cart-add'));
+                });
+            });
+        }
+
+        // =========================================================================
+        // 5. PRODUCT QUICK-VIEW MODAL & PUT /api/products/{id}/price
+        // =========================================================================
+        function openProductModal(product, elapsedMs) {
+            state.activeModalProductId = product.id;
+            const views = state.mockViews.get(product.id) || 1;
+
+            dom.modalProductSku.textContent = product.id;
+            dom.modalElapsedPill.textContent = `X-Elapsed-Ms: ${elapsedMs} ms`;
+            dom.modalProductArtwork.innerHTML = getProductSvg(product.category);
+            dom.modalProductCategory.textContent = product.category || 'Catalog';
+            dom.modalProductViews.textContent = `${views} Valkey views`;
+            dom.modalProductName.textContent = product.name;
+            dom.modalProductDesc.textContent = product.description || 'No description provided.';
+            dom.modalProductPrice.textContent = formatMoney(product.price);
+            dom.modalNewPriceInput.value = Number(product.price).toFixed(2);
+            dom.modalRawJson.textContent = JSON.stringify(product, null, 2);
+
+            dom.productDetailModal.classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            dom.productDetailModal.classList.add('hidden');
+            state.activeModalProductId = null;
+        }
+
+        async function handleModalPriceUpdate(e) {
+            e.preventDefault();
+            const id = state.activeModalProductId;
+            const newPrice = parseFloat(dom.modalNewPriceInput.value);
+            if (!id || Number.isNaN(newPrice) || newPrice <= 0) return;
+
+            try {
+                let updated = null;
+                if (state.demoMode) {
+                    const existing = state.mockDb.get(id);
+                    const oldPrice = existing.price;
+                    existing.price = Number(newPrice.toFixed(2));
+                    state.mockDb.set(id, existing);
+                    updated = { ...existing };
+
+                    emitSseLog('PRICE_UPDATED', {
+                        id,
+                        name: existing.name,
+                        oldPrice,
+                        newPrice: existing.price
+                    });
+                } else {
+                    const res = await fetch(`${getBaseUrl()}/products/${encodeURIComponent(id)}/price?price=${encodeURIComponent(newPrice)}`, {
+                        method: 'PUT'
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    updated = await res.json();
+                }
+
+                dom.modalProductPrice.textContent = formatMoney(updated.price);
+                dom.modalRawJson.textContent = JSON.stringify(updated, null, 2);
+                showToast('Price Updated', `${updated.name} is now ${formatMoney(updated.price)}`, 'success');
+                await loadTrendingAndCatalog();
+                renderCart();
+            } catch (err) {
+                showToast('Price Update Failed', err.message, 'error');
+            }
+        }
+
+        // =========================================================================
+        // 6. POST /api/products/product (CREATE NEW PRODUCT)
+        // =========================================================================
+        async function handleCreateProduct(e) {
+            e.preventDefault();
+            const payload = {
+                id: dom.postIdInput.value.trim(),
+                name: dom.postNameInput.value.trim(),
+                price: Number(parseFloat(dom.postPriceInput.value).toFixed(2)),
+                category: dom.postCategoryInput.value,
+                description: dom.postDescInput.value.trim() || 'New SpringStore catalog arrival.'
+            };
+
+            if (!payload.id || !payload.name || Number.isNaN(payload.price)) return;
+
+            try {
+                if (state.demoMode) {
+                    state.mockDb.set(payload.id, payload);
+                    if (!state.mockViews.has(payload.id)) state.mockViews.set(payload.id, 1);
+                    emitSseLog('PRODUCT_CREATED', payload);
+                } else {
+                    const res = await fetch(`${getBaseUrl()}/products/product`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                }
+
+                dom.addProductModal.classList.add('hidden');
+                dom.createProductForm.reset();
+                showToast('Product Published', `${payload.name} added to SpringStore.`, 'success');
+                await loadTrendingAndCatalog();
+            } catch (err) {
+                showToast('Save Failed', err.message, 'error');
+            }
+        }
+
+        // =========================================================================
+        // 7. SHOPPING CART LOGIC
+        // =========================================================================
+        function addToCart(id) {
+            const product = state.mockDb.get(id);
+            if (!product) return;
+            state.cart.set(id, (state.cart.get(id) || 0) + 1);
+            renderCart();
+            showToast('Added to Cart', `${product.name} added to your bag.`, 'success');
+        }
+
+        function renderCart() {
+            let totalItems = 0;
+            let subtotal = 0;
+
+            if (state.cart.size === 0) {
+                dom.cartItemsContainer.innerHTML = `
+                        <div class="text-center py-16 text-slate-400 text-sm">
+                            Your SpringStore cart is empty.
+                        </div>
+                    `;
+            } else {
+                dom.cartItemsContainer.innerHTML = Array.from(state.cart.entries()).map(([id, qty]) => {
+                    const p = state.mockDb.get(id);
+                    if (!p) return '';
+                    totalItems += qty;
+                    subtotal += p.price * qty;
+
+                    return `
+                            <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200 bg-[#F8F9FA]">
+                                <div class="min-w-0">
+                                    <h4 class="font-display font-bold text-sm text-[#191E1E] truncate">${escapeHtml(p.name)}</h4>
+                                    <p class="font-mono text-xs text-slate-500">${formatMoney(p.price)} × ${qty}</p>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" data-cart-dec="${escapeHtml(id)}" class="w-7 h-7 rounded-full bg-white border border-slate-300 text-xs font-bold hover:border-[#6DB33F]">-</button>
+                                    <span class="font-mono text-xs font-bold w-5 text-center">${qty}</span>
+                                    <button type="button" data-cart-inc="${escapeHtml(id)}" class="w-7 h-7 rounded-full bg-white border border-slate-300 text-xs font-bold hover:border-[#6DB33F]">+</button>
+                                </div>
+                            </div>
+                        `;
+                }).join('');
+
+                dom.cartItemsContainer.querySelectorAll('[data-cart-dec]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-cart-dec');
+                        const cur = state.cart.get(id) || 0;
+                        if (cur <= 1) state.cart.delete(id);
+                        else state.cart.set(id, cur - 1);
+                        renderCart();
+                    });
+                });
+
+                dom.cartItemsContainer.querySelectorAll('[data-cart-inc]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-cart-inc');
+                        state.cart.set(id, (state.cart.get(id) || 0) + 1);
+                        renderCart();
+                    });
+                });
+            }
+
+            dom.cartCountBadge.textContent = totalItems;
+            dom.drawerCartCount.textContent = totalItems;
+            dom.cartSubtotalText.textContent = formatMoney(subtotal);
+        }
+
+        // =========================================================================
+        // 8. SERVER-SENT EVENTS (GET /api/events)
+        // =========================================================================
+        function emitSseLog(eventName, payload) {
+            state.sseEventCount += 1;
+            dom.sseEventCountBadge.textContent = state.sseEventCount;
+
+            const summary = payload && payload.name
+                ? `${eventName}: ${payload.name} → ${payload.newPrice ? formatMoney(payload.newPrice) : formatMoney(payload.price)}`
+                : `${eventName}: ${JSON.stringify(payload)}`;
+            dom.liveTickerText.textContent = summary;
+
+            const entry = document.createElement('div');
+            entry.className = 'p-3 rounded-xl bg-white/5 border border-white/10 space-y-1';
+            entry.innerHTML = `
+                    <div class="flex items-center justify-between text-[11px]">
+                        <span class="text-[#6DB33F] font-bold">event: ${escapeHtml(eventName)}</span>
+                        <span class="text-slate-400">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <pre class="text-slate-200 whitespace-pre-wrap break-all">${escapeHtml(typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2))}</pre>
+                `;
+            dom.sseEventLog.prepend(entry);
+        }
+
+        function simulateStoreEvent() {
+            const keys = Array.from(state.mockDb.keys());
+            const id = keys[Math.floor(Math.random() * keys.length)];
+            const item = state.mockDb.get(id);
+            if (!item) return;
+
+            const oldPrice = item.price;
+            const discount = Math.max(9.99, Number((oldPrice * 0.9).toFixed(2)));
+            item.price = discount;
+            state.mockDb.set(id, item);
+
+            emitSseLog('FLASH_SALE_PRICE_DROP', {
+                id: item.id,
+                name: item.name,
+                oldPrice,
+                newPrice: discount
+            });
+
+            loadTrendingAndCatalog();
+            renderCart();
+        }
+
+        function connectSse() {
+            disconnectSse();
+            state.sseConnected = true;
+            dom.navSseDot.className = 'w-2 h-2 rounded-full bg-[#6DB33F] animate-ping';
+            dom.sseToggleBtn.textContent = 'Disconnect';
+            dom.sseToggleBtn.className = 'px-3 py-1.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition';
+
+            if (state.demoMode) {
+                emitSseLog('CONNECTED', { stream: 'Mock SseEmitter (/api/events)', status: 'SUBSCRIBED' });
+                state.mockSseTimer = setInterval(() => {
+                    if (state.sseConnected && state.demoMode) simulateStoreEvent();
+                }, 14000);
+            } else {
+                const url = `${getBaseUrl()}/events`;
+                const es = new EventSource(url);
+                state.eventSource = es;
+                es.onopen = () => emitSseLog('CONNECTED', { stream: url });
+                es.onmessage = (e) => {
+                    let data = e.data;
+                    try { data = JSON.parse(e.data); } catch (_) {}
+                    emitSseLog(e.type || 'message', data);
+                };
+                es.onerror = () => {
+                    emitSseLog('DISCONNECTED', 'EventSource closed or backend offline.');
+                    disconnectSse();
+                };
+            }
+        }
+
+        function disconnectSse() {
+            if (state.eventSource) {
+                state.eventSource.close();
+                state.eventSource = null;
+            }
+            if (state.mockSseTimer) {
+                clearInterval(state.mockSseTimer);
+                state.mockSseTimer = null;
+            }
+            state.sseConnected = false;
+            dom.navSseDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+            dom.sseToggleBtn.textContent = 'Connect';
+            dom.sseToggleBtn.className = 'px-3 py-1.5 rounded-full bg-[#6DB33F] hover:bg-[#5FA134] text-white text-xs font-semibold transition';
+        }
+
+        // =========================================================================
+        // 9. MODE SWITCHING & EVENT LISTENERS
+        // =========================================================================
+        function setDemoMode(enabled, notify = true) {
+            state.demoMode = enabled;
+            dom.demoModeToggle.setAttribute('aria-checked', String(enabled));
+            if (enabled) {
+                dom.demoModeToggle.className = 'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-amber-500 transition-colors duration-200 focus:outline-none';
+                dom.demoModeKnob.className = 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 translate-x-4';
+                dom.modeBadgeLabel.textContent = 'Demo Storefront';
+                dom.modeBadgeLabel.className = 'font-mono text-[11px] text-amber-300 font-medium';
+                if (notify) showToast('Demo Storefront Mode', 'Simulated Spring + Valkey catalog active.', 'info');
+            } else {
+                dom.demoModeToggle.className = 'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-[#6DB33F] transition-colors duration-200 focus:outline-none';
+                dom.demoModeKnob.className = 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 translate-x-0';
+                dom.modeBadgeLabel.textContent = 'Live Spring API';
+                dom.modeBadgeLabel.className = 'font-mono text-[11px] text-[#6DB33F] font-medium';
+                if (notify) showToast('Live Spring API Mode', `Connected to ${getBaseUrl()}`, 'success');
+            }
+            connectSse();
+            loadTrendingAndCatalog();
+        }
+
+        async function pingBackend(silentAutoDetect = false) {
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 1600);
+                const res = await fetch(`${getBaseUrl()}/popular?limit=1`, { signal: controller.signal });
+                clearTimeout(timer);
+                if (res.ok) {
+                    if (silentAutoDetect && state.demoMode) setDemoMode(false, false);
+                    if (!silentAutoDetect) showToast('Spring Boot Online', `Reachable at ${getBaseUrl()}`, 'success');
+                    return true;
+                }
+                throw new Error(`HTTP ${res.status}`);
+            } catch (_) {
+                if (!silentAutoDetect) {
+                    showToast('Backend Offline', `Could not reach ${getBaseUrl()}. Using Demo Storefront.`, 'error');
+                }
+                return false;
+            }
+        }
+
+        // Wire Event Listeners
+        dom.demoModeToggle.addEventListener('click', () => setDemoMode(!state.demoMode, true));
+        dom.pingBackendBtn.addEventListener('click', () => pingBackend(false));
+
+        dom.navLookupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            inspectProduct(dom.navLookupInput.value, true);
+        });
+        dom.mobileLookupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            inspectProduct(dom.mobileLookupInput.value, true);
+        });
+        dom.heroTest404Btn.addEventListener('click', () => inspectProduct('non-existent-999', true));
+
+        dom.popularLimitSelect.addEventListener('change', loadTrendingAndCatalog);
+        dom.refreshPopularBtn.addEventListener('click', loadTrendingAndCatalog);
+
+        // Product Detail Modal Listeners
+        dom.closeProductModalBtn.addEventListener('click', closeProductModal);
+        dom.productDetailModal.addEventListener('click', (e) => {
+            if (e.target === dom.productDetailModal) closeProductModal();
+        });
+        dom.modalAddToCartBtn.addEventListener('click', () => {
+            if (state.activeModalProductId) addToCart(state.activeModalProductId);
+        });
+        dom.modalUpdatePriceForm.addEventListener('submit', handleModalPriceUpdate);
+
+        // Add Product Modal Listeners
+        dom.openAddProductModalBtn.addEventListener('click', () => dom.addProductModal.classList.remove('hidden'));
+        dom.closeAddProductModalBtn.addEventListener('click', () => dom.addProductModal.classList.add('hidden'));
+        dom.cancelAddProductBtn.addEventListener('click', () => dom.addProductModal.classList.add('hidden'));
+        dom.createProductForm.addEventListener('submit', handleCreateProduct);
+
+        // Cart Drawer Listeners
+        dom.openCartDrawerBtn.addEventListener('click', () => dom.cartDrawer.classList.remove('hidden'));
+        dom.closeCartDrawerBtn.addEventListener('click', () => dom.cartDrawer.classList.add('hidden'));
+        dom.cartDrawer.addEventListener('click', (e) => {
+            if (e.target === dom.cartDrawer) dom.cartDrawer.classList.add('hidden');
+        });
+        dom.checkoutCartBtn.addEventListener('click', () => {
+            if (state.cart.size === 0) return;
+            state.cart.clear();
+            renderCart();
+            dom.cartDrawer.classList.add('hidden');
+            showToast('Order Placed!', 'Thank you for shopping at SpringStore.', 'success');
+        });
+
+        // SSE Drawer & Ticker Listeners
+        dom.openSseDrawerBtn.addEventListener('click', () => dom.sseDrawer.classList.remove('hidden'));
+        dom.tickerViewLogBtn.addEventListener('click', () => dom.sseDrawer.classList.remove('hidden'));
+        dom.closeSseDrawerBtn.addEventListener('click', () => dom.sseDrawer.classList.add('hidden'));
+        dom.sseDrawer.addEventListener('click', (e) => {
+            if (e.target === dom.sseDrawer) dom.sseDrawer.classList.add('hidden');
+        });
+        dom.sseToggleBtn.addEventListener('click', () => {
+            if (state.sseConnected) disconnectSse();
+            else connectSse();
+        });
+        dom.sseSimulateBtn.addEventListener('click', simulateStoreEvent);
+        dom.tickerSimulateBtn.addEventListener('click', simulateStoreEvent);
+        dom.sseClearBtn.addEventListener('click', () => {
+            dom.sseEventLog.innerHTML = '';
+            state.sseEventCount = 0;
+            dom.sseEventCountBadge.textContent = '0';
+        });
+
+        // Boot Storefront
+        window.addEventListener('DOMContentLoaded', async () => {
+            seedStorefront();
+            renderCart();
+            await pingBackend(true);
+            connectSse();
+            await inspectProduct('prod-101', false);
+        });
+    })();
+</script>
 </body>
 </html>
