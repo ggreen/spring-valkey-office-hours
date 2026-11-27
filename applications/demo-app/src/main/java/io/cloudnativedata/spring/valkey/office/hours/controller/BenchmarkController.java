@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 
-import io.cloudnativedata.spring.valkey.office.hours.ProductCatalog;
+import io.cloudnativedata.spring.valkey.office.hours.repository.ProductCatalog;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;

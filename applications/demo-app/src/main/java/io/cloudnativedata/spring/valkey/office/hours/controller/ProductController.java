@@ -1,19 +1,20 @@
 package io.cloudnativedata.spring.valkey.office.hours.controller;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
+import io.cloudnativedata.spring.valkey.office.hours.service.ProductEvents;
 import io.cloudnativedata.spring.valkey.office.hours.domains.Product;
-import io.cloudnativedata.spring.valkey.office.hours.ProductCatalog;
-import io.cloudnativedata.spring.valkey.office.hours.ProductEvents;
+import io.cloudnativedata.spring.valkey.office.hours.domains.ProductViews;
 import io.cloudnativedata.spring.valkey.office.hours.service.ProductService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api")
@@ -32,16 +33,16 @@ public class ProductController {
     }
 
     @GetMapping("/products/{id}")
-    public ResponseEntity<Product> get(@PathVariable String id) {
+    public ResponseEntity<Product> getProduct(@PathVariable String id) {
         long start = System.nanoTime();
-        ProductCatalog.consumeDbHit();
-        Product product = service.get(id);
-        boolean miss = ProductCatalog.consumeDbHit();
+        var product = service.findProductById(id);
+        long end = System.nanoTime();
+
         // Valkey sorted set as a real-time "most viewed" leaderboard
         redis.opsForZSet().incrementScore(VIEWS, id, 1);
+
         return ResponseEntity.ok()
-                .header("X-Cache", miss ? "MISS" : "HIT")
-                .header("X-Elapsed-Ms", "%.2f".formatted((System.nanoTime() - start) / 1_000_000.0))
+                .header("X-Elapsed-Ms", "%.2f".formatted((end - start) / 1_000_000.0))
                 .body(product);
     }
 
@@ -51,11 +52,24 @@ public class ProductController {
     }
 
     @GetMapping("/popular")
-    public List<Map<String, Object>> popular(@RequestParam(defaultValue = "5") int limit) {
+    public List<ProductViews> popular(@RequestParam(defaultValue = "5") int limit) {
+
+        //retrieves the top (ex: top 5) members of a Redis Sorted Set (ZSET)
+        // ordered by highest score first, including each member's score.
         var top = redis.opsForZSet().reverseRangeWithScores(VIEWS, 0, limit - 1);
-        if (top == null) return List.of();
+        if (top == null)
+            return List.of();
+
+        return top.stream().map( t -> ProductViews.builder()
+                .product(service.findProductById(t.getValue()))
+                .views(Objects.requireNonNull(t.getScore()).longValue())
+                .build()).toList();
+        /*
         return top.stream().map(t -> Map.<String, Object>of(
-                "product", service.get(t.getValue()), "views", t.getScore().longValue())).toList();
+                "product", service.findProductById(t.getValue()),
+                        "views", t.getScore().longValue()))
+                .toList();
+                */
     }
 
     @GetMapping(path = "/events", produces = "text/event-stream")
@@ -67,5 +81,12 @@ public class ProductController {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> notFound(NoSuchElementException e) {
         return Map.of("error", e.getMessage());
+    }
+
+    @PostMapping("/products/product")
+    public void saveProduct(@RequestBody Product product) {
+
+        this.service.saveProduct(product);
+
     }
 }

@@ -1,4 +1,4 @@
-package io.cloudnativedata.spring.valkey.office.hours;
+package io.cloudnativedata.spring.valkey.office.hours.repository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -41,7 +41,7 @@ public class ProductCatalog {
                     category,
                     BigDecimal.valueOf(9_99 + random.nextInt(199_000), 2),
                     random.nextInt(500),
-                    System.currentTimeMillis()));
+                    Instant.now().getEpochSecond()));
         });
     }
 

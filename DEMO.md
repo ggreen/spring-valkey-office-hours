@@ -28,6 +28,21 @@ holds 1,000 products; Valkey sits in front of it through Spring's cache abstract
 
 
 ```shell
+curl -X 'POST' \
+  'http://localhost:9090/api/products/product' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "id": "101",
+  "name": "Spring Peanut Butter",
+  "category": "food",
+  "price": 2500000,
+  "stock": 1000,
+  "updatedAt": 1795742340
+}'
+```
+
+```shell
 curl -i "http://localhost:9090/api/products/101"
 ```
 

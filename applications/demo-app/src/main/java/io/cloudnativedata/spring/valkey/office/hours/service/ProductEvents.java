@@ -1,4 +1,4 @@
-package io.cloudnativedata.spring.valkey.office.hours;
+package io.cloudnativedata.spring.valkey.office.hours.service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
