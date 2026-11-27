@@ -1,0 +1,4 @@
+Getting apps in org data-flow / space data-demo as gregory...
+
+name          requested state   processes           routes
+product-app   started           web:2/2, task:0/0   product-app.apps.tas-ndc.kuhn-labs.com
