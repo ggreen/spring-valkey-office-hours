@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.cloudnativedata.spring.valkey.office.hours.domains.Product;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -17,6 +18,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * Event-driven data: price changes are published to a Valkey pub/sub channel.
  * Any app instance subscribed to the channel pushes them to its browsers over SSE.
  */
+@Slf4j
 @Component
 public class ProductEvents implements MessageListener {
 
@@ -50,7 +52,8 @@ public class ProductEvents implements MessageListener {
         String body = new String(message.getBody(), StandardCharsets.UTF_8);
         for (SseEmitter emitter : emitters) {
             try {
-                emitter.send(SseEmitter.event().name("price-change").data(body));
+                log.info("Sending message event message: {}", body);
+                emitter.send(SseEmitter.event().name("price-update").data(body));
             } catch (IOException | IllegalStateException e) {
                 emitters.remove(emitter);
             }
