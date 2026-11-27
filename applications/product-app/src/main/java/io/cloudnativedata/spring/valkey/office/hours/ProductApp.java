@@ -6,8 +6,8 @@ import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
 @EnableCaching
-public class ValkeyOfficeHoursApplication {
+public class ProductApp {
     public static void main(String[] args) {
-        SpringApplication.run(ValkeyOfficeHoursApplication.class, args);
+        SpringApplication.run(ProductApp.class, args);
     }
 }
