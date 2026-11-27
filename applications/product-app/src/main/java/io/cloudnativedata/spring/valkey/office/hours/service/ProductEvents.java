@@ -1,18 +1,18 @@
 package io.cloudnativedata.spring.valkey.office.hours.service;
 
+import io.cloudnativedata.spring.valkey.office.hours.domains.Product;
+import io.cloudnativedata.spring.valkey.office.hours.domains.ProductPriceChangeEvent;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.stream.StreamListener;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import io.cloudnativedata.spring.valkey.office.hours.domains.Product;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * Event-driven data: price changes are published to a Valkey pub/sub channel.
@@ -20,16 +20,16 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  */
 @Slf4j
 @Component
-public class ProductEvents implements MessageListener {
+public class ProductEvents implements StreamListener<String, MapRecord<String, String, ProductPriceChangeEvent>> {
 
     public static final String CHANNEL = "product-events";
 
     private final StringRedisTemplate redis;
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    public ProductEvents(StringRedisTemplate redis, RedisMessageListenerContainer container) {
+    public ProductEvents(StringRedisTemplate redis) {
         this.redis = redis;
-        container.addMessageListener(this, new ChannelTopic(CHANNEL));
+//        container.addMessageListener(this, new ChannelTopic(CHANNEL));
     }
 
     public void publishPriceChange(Product before, Product after) {
@@ -47,7 +47,7 @@ public class ProductEvents implements MessageListener {
         return emitter;
     }
 
-    @Override
+//    @Override
     public void onMessage(org.springframework.data.redis.connection.Message message, byte[] pattern) {
         String body = new String(message.getBody(), StandardCharsets.UTF_8);
         for (SseEmitter emitter : emitters) {
@@ -58,5 +58,10 @@ public class ProductEvents implements MessageListener {
                 emitters.remove(emitter);
             }
         }
+    }
+
+    @Override
+    public void onMessage(MapRecord<String, String, ProductPriceChangeEvent> message) {
+
     }
 }

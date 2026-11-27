@@ -1,0 +1,9 @@
+applications:
+  - name: product-app
+    memory: 1400M
+    log-rate-limit-per-second: -1
+    services:
+      - valkey
+      - postgres
+    env:
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 21.+}}'
